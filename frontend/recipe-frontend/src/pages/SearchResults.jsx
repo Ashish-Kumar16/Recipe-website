@@ -1,12 +1,8 @@
 import React from "react";
-import { useSearchParams } from "react-router-dom";
 import RecipeGrid from "../components/RecipeGrid";
 import { Typography, Box } from "@mui/material";
 
-const SearchResults = ({ searchQuery: propSearchQuery }) => {
-  const [searchParams] = useSearchParams();
-  const searchQuery = propSearchQuery || searchParams.get("query") || "";
-
+const SearchResults = ({ searchQuery }) => {
   return (
     <Box>
       <Typography variant="h4" gutterBottom sx={{ textAlign: "center", mt: 4 }}>

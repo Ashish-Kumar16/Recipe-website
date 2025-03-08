@@ -1,264 +1,82 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { fetchSavedRecipes } from "../features/savedRecipesSlice"; // Assuming this exists
 import {
-  fetchSavedRecipes,
-  reorderRecipes,
-  updateRecipeOrder,
-  deleteRecipe, // New action
-} from "../features/savedRecipesSlice";
-import {
-  Box,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
-  Avatar,
+  Grid,
+  Card,
+  CardMedia,
+  CardContent,
   Typography,
+  Box,
   Skeleton,
-  Chip,
   IconButton,
-  useMediaQuery,
-  useTheme,
 } from "@mui/material";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import CloseIcon from "@mui/icons-material/Close"; // Import CloseIcon for delete
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import ThumbUpIcon from "@mui/icons-material/ThumbUp";
+import BookmarkIcon from "@mui/icons-material/Bookmark";
 import { toast } from "react-toastify";
+import axios from "axios";
 
-const SavedRecipes = () => {
+const SavedRecipePage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     data: savedRecipes,
     status,
     error,
   } = useSelector((state) => state.savedRecipes);
-  const { isAuthenticated = false } = useSelector((state) => state.auth || {});
-
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
+  const { isAuthenticated } = useSelector((state) => state.auth);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 9;
 
   useEffect(() => {
-    if (isAuthenticated && (status === "idle" || status === "failed")) {
-      dispatch(fetchSavedRecipes())
-        .unwrap()
-        .catch((err) => {
-          toast.error(`Failed to load saved recipes: ${err}`);
-        });
+    if (isAuthenticated) {
+      dispatch(fetchSavedRecipes());
     }
-  }, [isAuthenticated, status, dispatch]);
+    setCurrentPage(1);
+  }, [dispatch, isAuthenticated, location.pathname]);
+
+  const totalPages = Math.ceil(savedRecipes.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentRecipes = savedRecipes.slice(startIndex, endIndex);
 
   const handleCardClick = (recipeId) => {
     navigate(`/recipe/${recipeId}`);
   };
 
-  const handleDeleteRecipe = (recipeId) => {
-    dispatch(deleteRecipe(recipeId))
-      .unwrap()
-      .then(() => toast.success("Recipe deleted successfully!"))
-      .catch((err) => toast.error(`Failed to delete recipe: ${err}`));
-  };
-
-  const handleDragEnd = (result) => {
-    if (!result.destination) return;
-
-    const sourceIndex = result.source.index;
-    const destIndex = result.destination.index;
-
-    const reorderedRecipes = Array.from(savedRecipes);
-    const [movedRecipe] = reorderedRecipes.splice(sourceIndex, 1);
-    reorderedRecipes.splice(destIndex, 0, movedRecipe);
-
-    dispatch(reorderRecipes(reorderedRecipes));
-    dispatch(updateRecipeOrder(reorderedRecipes))
-      .unwrap()
-      .then(() => toast.success("Recipes reordered successfully!"))
-      .catch((err) => {
-        toast.error(`Failed to save order: ${err}`);
-        dispatch(reorderRecipes(savedRecipes));
-      });
-  };
-
-  const renderListContent = () => {
-    if (status === "loading") {
-      return [...Array(5)].map((_, index) => (
-        <ListItem
-          key={index}
-          sx={{ py: 1, flexDirection: isMobile ? "column" : "row" }}
-        >
-          <Skeleton
-            variant="text"
-            width={isMobile ? "20%" : 30}
-            sx={{ mr: isMobile ? 0 : 2, mb: isMobile ? 1 : 0 }}
-          />
-          <ListItemAvatar>
-            <Skeleton
-              variant="rectangular"
-              width={isMobile ? "100%" : 80}
-              height={60}
-            />
-          </ListItemAvatar>
-          <ListItemText
-            primary={<Skeleton variant="text" width={isMobile ? "80%" : 200} />}
-            secondary={
-              <Skeleton variant="text" width={isMobile ? "60%" : 100} />
-            }
-            sx={{ textAlign: isMobile ? "center" : "left" }}
-          />
-        </ListItem>
-      ));
-    }
-
-    if (savedRecipes.length === 0 && status === "succeeded") {
-      return (
-        <Typography
-          textAlign="center"
-          sx={{ mt: 4, fontSize: { xs: "1rem", md: "1.25rem" } }}
-        >
-          No saved recipes yet. Start saving some delicious dishes!
-        </Typography>
+  const handleDeleteRecipe = async (recipeId) => {
+    try {
+      const savedRecipeResponse = await axios.get(
+        "https://recipe-website-arnr.onrender.com/api/recipes/saved",
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        },
       );
-    }
+      const savedRecipe = savedRecipeResponse.data.find(
+        (r) => r.recipeId === recipeId,
+      );
+      if (!savedRecipe) throw new Error("Saved recipe not found");
 
-    return savedRecipes.map((recipe, index) => (
-      <Draggable
-        key={recipe._id}
-        draggableId={recipe._id.toString()}
-        index={index}
-      >
-        {(provided) => (
-          <ListItem
-            ref={provided.innerRef}
-            {...provided.draggableProps}
-            {...provided.dragHandleProps}
-            sx={{
-              py: 1,
-              borderRadius: 2,
-              backgroundColor: "#fff",
-              mb: 1,
-              boxShadow: 1,
-              "&:hover": { boxShadow: 3, backgroundColor: "#f1f3f5" },
-              cursor: "pointer",
-              display: "flex",
-              flexDirection: isMobile ? "column" : "row",
-              alignItems: isMobile ? "center" : "center",
-              position: "relative", // For positioning the delete icon
-            }}
-          >
-            <Typography
-              variant="body1"
-              sx={{
-                width: isMobile ? "auto" : 30,
-                textAlign: "center",
-                fontWeight: "bold",
-                color: "#2c3e50",
-                mr: isMobile ? 0 : 2,
-                mb: isMobile ? 1 : 0,
-              }}
-            >
-              {index + 1}.
-            </Typography>
-            <ListItemAvatar>
-              <Avatar
-                variant="square"
-                src={recipe.image}
-                alt={recipe.title}
-                sx={{
-                  width: isMobile ? "100%" : isTablet ? 60 : 80,
-                  height: isMobile ? 120 : 60,
-                  mr: isMobile ? 0 : 2,
-                  mb: isMobile ? 1 : 0,
-                }}
-              />
-            </ListItemAvatar>
-            <ListItemText
-              onClick={() => handleCardClick(recipe.recipeId)}
-              primary={
-                <Typography
-                  variant="h6"
-                  sx={{
-                    color: "#2c3e50",
-                    fontSize: { xs: "1rem", md: "1.25rem" },
-                    textAlign: isMobile ? "center" : "left",
-                  }}
-                >
-                  {recipe.title}
-                </Typography>
-              }
-              secondary={
-                <Box
-                  component="span"
-                  display="flex"
-                  flexDirection={isMobile ? "column" : "row"}
-                  alignItems="center"
-                  gap={1}
-                  sx={{ justifyContent: isMobile ? "center" : "flex-start" }}
-                >
-                  <Chip
-                    label={recipe.vegan ? "Vegetarian" : "Non-Vegetarian"}
-                    size="small"
-                    sx={{
-                      backgroundColor: recipe.vegan ? "#4caf50" : "#d32f2f",
-                      color: "#fff",
-                      mb: isMobile ? 1 : 0,
-                    }}
-                  />
-                  <Box
-                    component="span"
-                    display="flex"
-                    alignItems="center"
-                    gap={0.5}
-                  >
-                    <AccessTimeIcon
-                      fontSize="small"
-                      sx={{ color: "#7f8c8d" }}
-                    />
-                    <Typography
-                      component="span"
-                      variant="body2"
-                      sx={{
-                        color: "#7f8c8d",
-                        fontSize: { xs: "0.8rem", md: "0.875rem" },
-                      }}
-                    >
-                      {recipe.readyInMinutes} min
-                    </Typography>
-                  </Box>
-                </Box>
-              }
-            />
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent card click from triggering
-                handleDeleteRecipe(recipe._id);
-              }}
-              sx={{
-                position: isMobile ? "absolute" : "relative",
-                top: isMobile ? 8 : "auto",
-                right: isMobile ? 8 : "auto",
-                color: "#d32f2f",
-                "&:hover": { color: "#b71c1c" },
-                ml: isMobile ? 0 : 1,
-              }}
-            >
-              <CloseIcon />
-            </IconButton>
-          </ListItem>
-        )}
-      </Draggable>
-    ));
+      await axios.delete(
+        `https://recipe-website-arnr.onrender.com/api/recipes/saved/${savedRecipe._id}`,
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        },
+      );
+
+      dispatch(fetchSavedRecipes()); // Refresh saved recipes
+      toast.success("Recipe removed from saved!");
+    } catch (err) {
+      console.error("Error deleting recipe:", err);
+      toast.error(err.response?.data?.error || "Failed to delete recipe");
+    }
   };
 
   return (
-    <Box
-      sx={{
-        padding: { xs: 2, sm: 3, md: 4 },
-        backgroundColor: "#f8f9fa",
-        minHeight: "100vh",
-      }}
-    >
+    <Box sx={{ padding: 4, backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
       <Typography
         variant="h4"
         gutterBottom
@@ -266,60 +84,125 @@ const SavedRecipes = () => {
           fontWeight: "bold",
           textAlign: "center",
           color: "#2c3e50",
-          mb: { xs: 2, md: 3 },
-          fontSize: { xs: "1.5rem", sm: "2rem", md: "2.5rem" },
+          mb: 3,
         }}
       >
-        🍽️ Your Saved Recipes
+        Saved Recipes
       </Typography>
 
-      {!isAuthenticated ? (
-        <Typography
-          textAlign="center"
-          color="error"
-          sx={{ fontSize: { xs: "0.9rem", md: "1rem" } }}
-        >
-          Please sign in to view your saved recipes.
-        </Typography>
-      ) : (
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <Droppable droppableId="savedRecipes" direction="vertical">
-            {(provided) => (
-              <List
+      <Grid container spacing={3} justifyContent="center">
+        {status === "loading" ? (
+          [...Array(itemsPerPage)].map((_, index) => (
+            <Grid item xs={6} sm={6} md={4} key={index}>
+              <Card sx={{ borderRadius: 2, boxShadow: 2, height: "100%" }}>
+                <Skeleton variant="rectangular" height={200} />
+                <CardContent>
+                  <Skeleton variant="text" width={100} height={30} />
+                  <Skeleton variant="text" width="90%" height={24} />
+                  <Box display="flex" alignItems="center" gap={1} mt={1}>
+                    <Skeleton variant="circular" width={22} height={22} />
+                    <Skeleton variant="text" width={60} />
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))
+        ) : currentRecipes.length > 0 ? (
+          currentRecipes.map((recipe) => (
+            <Grid item xs={6} sm={6} md={4} key={recipe.recipeId}>
+              <Card
                 sx={{
-                  maxWidth: { xs: "100%", sm: 600, md: 600 },
-                  mx: "auto",
-                  px: { xs: 0, sm: 1 },
+                  borderRadius: 3,
+                  boxShadow: 3,
+                  transition: "transform 0.3s ease-in-out, box-shadow 0.3s",
+                  "&:hover": { transform: "scale(1.03)", boxShadow: 5 },
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  cursor: "pointer",
+                  position: "relative",
                 }}
-                ref={provided.innerRef}
-                {...provided.droppableProps}
+                onClick={() => handleCardClick(recipe.recipeId)}
               >
-                {renderListContent()}
-                {provided.placeholder}
-              </List>
-            )}
-          </Droppable>
-        </DragDropContext>
-      )}
+                <CardMedia
+                  component="img"
+                  height="200"
+                  image={recipe.image}
+                  alt={recipe.title}
+                  sx={{
+                    borderTopLeftRadius: 3,
+                    borderTopRightRadius: 3,
+                    objectFit: "cover",
+                  }}
+                />
+                <IconButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteRecipe(recipe.recipeId);
+                  }}
+                  sx={{
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                    color: "#d32f2f",
+                  }}
+                >
+                  <BookmarkIcon />
+                </IconButton>
+                <CardContent sx={{ paddingBottom: 2 }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      textTransform: "uppercase",
+                      fontWeight: "bold",
+                      letterSpacing: 1,
+                      color: "#d32f2f",
+                    }}
+                  >
+                    {recipe.vegan ? "Vegetarian" : "Non-Vegetarian"}
+                  </Typography>
+                  <Typography
+                    variant="h6"
+                    fontWeight="bold"
+                    sx={{ color: "#2c3e50", mt: 1 }}
+                  >
+                    {recipe.title}
+                  </Typography>
+                  <Box display="flex" alignItems="center" mt={1}>
+                    <AccessTimeIcon
+                      fontSize="small"
+                      sx={{ color: "#7f8c8d" }}
+                    />
+                    <Typography variant="body2" sx={{ color: "#7f8c8d" }}>
+                      {recipe.readyInMinutes} MINUTES
+                    </Typography>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))
+        ) : (
+          <Typography variant="body1" sx={{ textAlign: "center", mt: 4 }}>
+            No saved recipes found.
+          </Typography>
+        )}
+      </Grid>
 
       {status === "failed" && (
-        <Box textAlign="center" mt={{ xs: 3, md: 5 }}>
-          <Typography
-            color="error"
-            sx={{ fontSize: { xs: "1rem", md: "1.2rem" } }}
-          >
+        <Box textAlign="center" mt={5}>
+          <Typography color="error" fontSize="1.2rem">
             ⚠️ {error}
           </Typography>
           <button
             style={{
-              padding: isMobile ? "8px 16px" : "10px 20px",
+              padding: "10px 20px",
               marginTop: "10px",
               backgroundColor: "#ff6f61",
               color: "white",
               border: "none",
               borderRadius: "5px",
               cursor: "pointer",
-              fontSize: isMobile ? "0.9rem" : "1rem",
             }}
             onClick={() => dispatch(fetchSavedRecipes())}
           >
@@ -327,8 +210,52 @@ const SavedRecipes = () => {
           </button>
         </Box>
       )}
+
+      {totalPages > 1 && (
+        <Box display="flex" justifyContent="center" mt={4}>
+          <button
+            style={{
+              padding: "10px 20px",
+              marginRight: "10px",
+              border: "none",
+              backgroundColor: "#ff6f61",
+              color: "white",
+              fontSize: "1rem",
+              borderRadius: "5px",
+              cursor: "pointer",
+              opacity: currentPage === 1 ? 0.6 : 1,
+            }}
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </button>
+          <Typography variant="h6" sx={{ alignSelf: "center" }}>
+            Page {currentPage} of {totalPages}
+          </Typography>
+          <button
+            style={{
+              padding: "10px 20px",
+              marginLeft: "10px",
+              border: "none",
+              backgroundColor: "#ff6f61",
+              color: "white",
+              fontSize: "1rem",
+              borderRadius: "5px",
+              cursor: "pointer",
+              opacity: currentPage === totalPages ? 0.6 : 1,
+            }}
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </button>
+        </Box>
+      )}
     </Box>
   );
 };
 
-export default SavedRecipes;
+export default SavedRecipePage;

@@ -16,20 +16,17 @@ import {
   Search as SearchIcon,
   Clear as ClearIcon,
   Menu as MenuIcon,
-  ArrowBack as ArrowBackIcon,
-  ArrowForward as ArrowForwardIcon,
 } from "@mui/icons-material";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../features/authSlice";
 import AuthCard from "./AuthCard";
 
-const Navbar = ({ onSearch, totalPages = 1 }) => {
+const Navbar = ({ onSearch }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [anchorEl, setAnchorEl] = useState(null);
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
   const [openAuth, setOpenAuth] = useState(false);
-  const [page, setPage] = useState(1);
 
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const { data: savedRecipes } = useSelector((state) => state.savedRecipes);
@@ -37,28 +34,17 @@ const Navbar = ({ onSearch, totalPages = 1 }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // console.log(
-  //   "Navbar render - isAuthenticated:",
-  //   isAuthenticated,
-  //   "user:",
-  //   user,
-  // );
-
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      onSearch(searchQuery, page);
-      setPage(1);
-    }
+    onSearch(searchQuery); // Pass query to parent (App)
   };
 
   const handleClear = () => {
     setSearchQuery("");
-    onSearch("");
-    setPage(1);
+    onSearch(""); // Clear search in parent
   };
 
   const handleProfileClick = (event) => {
@@ -88,32 +74,8 @@ const Navbar = ({ onSearch, totalPages = 1 }) => {
   };
 
   const handleMenuItemClick = (path) => {
-    if (path === "/home" || path === "/recipes") {
-      navigate("/");
-    } else {
-      navigate(path);
-    }
+    navigate(path === "/home" ? "/" : path);
     handleMenuClose();
-  };
-
-  const handlePrevious = () => {
-    if (page > 1) {
-      setPage((prev) => {
-        const newPage = prev - 1;
-        if (searchQuery.trim()) onSearch(searchQuery, newPage);
-        return newPage;
-      });
-    }
-  };
-
-  const handleNext = () => {
-    if (page < totalPages) {
-      setPage((prev) => {
-        const newPage = prev + 1;
-        if (searchQuery.trim()) onSearch(searchQuery, newPage);
-        return newPage;
-      });
-    }
   };
 
   const LogoComponent = () => (
@@ -306,34 +268,6 @@ const Navbar = ({ onSearch, totalPages = 1 }) => {
               </IconButton>
             )}
           </Box>
-
-          {isMobile && searchQuery.trim() && (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <IconButton
-                onClick={handlePrevious}
-                disabled={page === 1}
-                sx={{
-                  color: page === 1 ? "grey" : "#ff7043",
-                  padding: "4px",
-                }}
-              >
-                <ArrowBackIcon fontSize="medium" />
-              </IconButton>
-              <Typography variant="body2" sx={{ fontSize: "1rem" }}>
-                {page} / {totalPages}
-              </Typography>
-              <IconButton
-                onClick={handleNext}
-                disabled={page === totalPages}
-                sx={{
-                  color: page === totalPages ? "grey" : "#ff7043",
-                  padding: "4px",
-                }}
-              >
-                <ArrowForwardIcon fontSize="medium" />
-              </IconButton>
-            </Box>
-          )}
         </Box>
 
         {isMobile && (

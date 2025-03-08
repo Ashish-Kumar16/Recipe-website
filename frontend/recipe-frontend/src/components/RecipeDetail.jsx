@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom"; // Add useLocation
 import { fetchRecipeById } from "../features/recipesSlice";
 import {
   Box,
@@ -24,16 +24,35 @@ import RestaurantIcon from "@mui/icons-material/Restaurant";
 const RecipeDetail = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
-  const { recipe, status, error } = useSelector((state) => state.recipes);
+  const location = useLocation(); // Track route changes
+  const { recipeDetail, detailStatus, detailError } = useSelector(
+    (state) => state.recipes,
+  ); // Use recipeDetail instead of recipe
   const [servings, setServings] = useState(null);
   const [checkedIngredients, setCheckedIngredients] = useState({});
+
+  useEffect(() => {
+    // Fetch recipe whenever id or pathname changes
+    dispatch(fetchRecipeById(id));
+  }, [dispatch, id, location.pathname]); // Depend on id and pathname
+
+  useEffect(() => {
+    if (recipeDetail) {
+      setServings(recipeDetail.servings);
+      const initialChecked = {};
+      recipeDetail.extendedIngredients.forEach((ingredient) => {
+        initialChecked[ingredient.id] = false;
+      });
+      setCheckedIngredients(initialChecked);
+    }
+  }, [recipeDetail]);
 
   const handleShare = async () => {
     try {
       if (navigator.share) {
         await navigator.share({
-          title: recipe.title,
-          text: `Check out this recipe: ${recipe.title}`,
+          title: recipeDetail.title,
+          text: `Check out this recipe: ${recipeDetail.title}`,
           url: window.location.href,
         });
       } else {
@@ -56,23 +75,6 @@ const RecipeDetail = () => {
       [ingredientId]: !prev[ingredientId],
     }));
   };
-
-  useEffect(() => {
-    if (status === "idle") {
-      dispatch(fetchRecipeById(id));
-    }
-  }, [status, dispatch, id]);
-
-  useEffect(() => {
-    if (recipe) {
-      setServings(recipe.servings);
-      const initialChecked = {};
-      recipe.extendedIngredients.forEach((ingredient) => {
-        initialChecked[ingredient.id] = false;
-      });
-      setCheckedIngredients(initialChecked);
-    }
-  }, [recipe]);
 
   const renderSkeleton = () => (
     <Box
@@ -106,13 +108,13 @@ const RecipeDetail = () => {
     </Box>
   );
 
-  if (status === "loading") return renderSkeleton();
+  if (detailStatus === "loading") return renderSkeleton();
 
-  if (status === "failed") {
+  if (detailStatus === "failed") {
     return (
       <Box textAlign="center" mt={5} px={2}>
         <Typography color="error" fontSize={{ xs: "1rem", sm: "1.2rem" }}>
-          ⚠️ {error}
+          ⚠️ {detailError}
         </Typography>
         <Button
           variant="contained"
@@ -125,11 +127,11 @@ const RecipeDetail = () => {
     );
   }
 
-  if (!recipe) return null;
+  if (!recipeDetail) return null;
 
-  const proteinMatch = recipe.summary.match(/(\d+)g of protein/);
-  const fatMatch = recipe.summary.match(/(\d+)g of fat/);
-  const caloriesMatch = recipe.summary.match(/(\d+) calories/);
+  const proteinMatch = recipeDetail.summary.match(/(\d+)g of protein/);
+  const fatMatch = recipeDetail.summary.match(/(\d+)g of fat/);
+  const caloriesMatch = recipeDetail.summary.match(/(\d+) calories/);
 
   return (
     <Box
@@ -144,7 +146,7 @@ const RecipeDetail = () => {
           fontSize: { xs: "1.5rem", sm: "2rem", md: "2.5rem" },
         }}
       >
-        {recipe.title}
+        {recipeDetail.title}
       </Typography>
       <Box
         display="flex"
@@ -161,7 +163,7 @@ const RecipeDetail = () => {
             style={{ borderRadius: "50%", width: 40, height: 40 }}
           />
           <Typography variant="body2" sx={{ ml: 1, color: "#7f8c8d" }}>
-            {recipe.creditsText || "Unknown Author"}
+            {recipeDetail.creditsText || "Unknown Author"}
           </Typography>
         </Box>
         <Typography variant="body2" sx={{ color: "#7f8c8d" }}>
@@ -180,12 +182,9 @@ const RecipeDetail = () => {
       <Card sx={{ borderRadius: 2, boxShadow: 2 }}>
         <CardMedia
           component="img"
-          image={recipe.image}
-          alt={recipe.title}
-          sx={{
-            height: { xs: 200, sm: 300, md: 400 },
-            objectFit: "cover",
-          }}
+          image={recipeDetail.image}
+          alt={recipeDetail.title}
+          sx={{ height: { xs: 200, sm: 300, md: 400 }, objectFit: "cover" }}
           onError={(e) => {
             e.target.src =
               "https://via.placeholder.com/400x400?text=Image+Not+Found";
@@ -197,7 +196,7 @@ const RecipeDetail = () => {
         <Box display="flex" alignItems="center" gap={1}>
           <AccessTimeIcon sx={{ color: "#7f8c8d" }} />
           <Typography variant="body2" sx={{ color: "#7f8c8d" }}>
-            {recipe.readyInMinutes} MINUTES
+            {recipeDetail.readyInMinutes} MINUTES
           </Typography>
         </Box>
         <Box display="flex" alignItems="center" gap={1}>
@@ -209,7 +208,7 @@ const RecipeDetail = () => {
         <Box display="flex" alignItems="center" gap={1}>
           <RestaurantIcon sx={{ color: "#7f8c8d" }} />
           <Typography variant="body2" sx={{ color: "#7f8c8d" }}>
-            {recipe.vegetarian ? "VEGETARIAN" : "NON-VEGETARIAN"}
+            {recipeDetail.vegetarian ? "VEGETARIAN" : "NON-VEGETARIAN"}
           </Typography>
         </Box>
       </Box>
@@ -222,19 +221,19 @@ const RecipeDetail = () => {
           lineHeight: 1.6,
           fontSize: { xs: "0.9rem", sm: "1rem" },
         }}
-        dangerouslySetInnerHTML={{ __html: recipe.summary }}
+        dangerouslySetInnerHTML={{ __html: recipeDetail.summary }}
       />
 
       <Box display="flex" alignItems="center" mt={2}>
         <Typography variant="body2" sx={{ mr: 1, color: "#7f8c8d" }}>
-          Rating ({recipe.aggregateLikes || 0})
+          Rating ({recipeDetail.aggregateLikes || 0})
         </Typography>
         {[...Array(5)].map((_, index) => (
           <StarIcon
             key={index}
             sx={{
               color:
-                index < Math.round(recipe.spoonacularScore / 20)
+                index < Math.round(recipeDetail.spoonacularScore / 20)
                   ? "#ff6f61"
                   : "#ddd",
               fontSize: { xs: 16, sm: 18 },
@@ -273,7 +272,7 @@ const RecipeDetail = () => {
         </Box>
       </Box>
       <Grid container spacing={2}>
-        {recipe.extendedIngredients.map((ingredient) => (
+        {recipeDetail.extendedIngredients.map((ingredient) => (
           <Grid item xs={12} sm={6} md={4} key={ingredient.id}>
             <Box
               sx={{
@@ -347,8 +346,8 @@ const RecipeDetail = () => {
         </Grid>
         <Grid item xs={6} sm={3}>
           <Typography variant="body2" sx={{ color: "#7f8c8d" }}>
-            {recipe.pricePerServing
-              ? `$${recipe.pricePerServing.toFixed(2)}`
+            {recipeDetail.pricePerServing
+              ? `$${recipeDetail.pricePerServing.toFixed(2)}`
               : "N/A"}
           </Typography>
           <Typography variant="body1" sx={{ fontWeight: "bold" }}>
@@ -365,7 +364,7 @@ const RecipeDetail = () => {
         </Grid>
         <Grid item xs={6} sm={3}>
           <Typography variant="body2" sx={{ color: "#7f8c8d" }}>
-            {recipe.healthScore || "N/A"}
+            {recipeDetail.healthScore || "N/A"}
           </Typography>
           <Typography variant="body1" sx={{ fontWeight: "bold" }}>
             Health Score
@@ -386,7 +385,7 @@ const RecipeDetail = () => {
       >
         Directions
       </Typography>
-      {recipe.analyzedInstructions[0]?.steps.map((step, index) => (
+      {recipeDetail.analyzedInstructions[0]?.steps.map((step, index) => (
         <Box key={index} mb={3}>
           <Box display="flex" alignItems="flex-start" gap={2}>
             <Box
@@ -473,8 +472,8 @@ const RecipeDetail = () => {
           variant="body2"
           sx={{ color: "#7f8c8d", fontSize: { xs: "0.85rem", sm: "0.9rem" } }}
         >
-          {recipe.diets.length > 0
-            ? recipe.diets.join(", ")
+          {recipeDetail.diets.length > 0
+            ? recipeDetail.diets.join(", ")
             : "No specific diet information available"}
         </Typography>
         <Typography
@@ -485,13 +484,13 @@ const RecipeDetail = () => {
             fontSize: { xs: "0.85rem", sm: "0.9rem" },
           }}
         >
-          Vegetarian: {recipe.vegetarian ? "Yes" : "No"}
+          Vegetarian: {recipeDetail.vegetarian ? "Yes" : "No"}
           <br />
-          Vegan: {recipe.vegan ? "Yes" : "No"}
+          Vegan: {recipeDetail.vegan ? "Yes" : "No"}
           <br />
-          Gluten Free: {recipe.glutenFree ? "Yes" : "No"}
+          Gluten Free: {recipeDetail.glutenFree ? "Yes" : "No"}
           <br />
-          Dairy Free: {recipe.dairyFree ? "Yes" : "No"}
+          Dairy Free: {recipeDetail.dairyFree ? "Yes" : "No"}
         </Typography>
       </Box>
 
