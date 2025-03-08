@@ -15,7 +15,6 @@ import {
 import {
   Search as SearchIcon,
   Clear as ClearIcon,
-  AccountCircle as AccountCircleIcon,
   Menu as MenuIcon,
   ArrowBack as ArrowBackIcon,
   ArrowForward as ArrowForwardIcon,
@@ -37,15 +36,20 @@ const Navbar = ({ onSearch, totalPages = 1 }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const { isAuthenticated, user, loading: authLoading } = useSelector(
+    (state) => state.auth
+  );
   const { data: savedRecipes } = useSelector((state) => state.savedRecipes);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
-    setTimeout(() => setLoading(false), 1000);
-  }, []);
+    // Wait for auth state to resolve
+    if (!authLoading) {
+      setLoading(false);
+    }
+  }, [authLoading]);
 
   if (loading) {
     return <NavbarSkeleton />;
@@ -214,7 +218,7 @@ const Navbar = ({ onSearch, totalPages = 1 }) => {
                     {text}
                     {text === "Saved Recipe" && ` (${savedRecipes.length})`}
                   </Link>
-                ),
+                )
               )}
             </Box>
           )}
@@ -242,7 +246,7 @@ const Navbar = ({ onSearch, totalPages = 1 }) => {
                     cursor: "pointer",
                     "&:hover": { textDecoration: "underline" },
                   }}
-                  onClick={() => setOpenAuth(true)} // Open AuthCard for Sign In
+                  onClick={() => setOpenAuth(true)}
                 >
                   login
                 </Typography>
