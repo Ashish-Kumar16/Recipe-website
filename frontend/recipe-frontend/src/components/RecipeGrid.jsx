@@ -11,10 +11,15 @@ import {
   Box,
   Skeleton,
   IconButton,
+  ToggleButton,
+  ToggleButtonGroup,
+  Button,
 } from "@mui/material";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import ThumbUpIcon from "@mui/icons-material/ThumbUp";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { toast } from "react-toastify";
 import axios from "axios";
 
@@ -30,6 +35,8 @@ const RecipeGrid = ({ searchQuery }) => {
   const { isAuthenticated = false } = useSelector((state) => state.auth || {});
   const [currentPage, setCurrentPage] = useState(1);
   const [savedRecipes, setSavedRecipes] = useState([]);
+  const [dietFilter, setDietFilter] = useState("all");
+  const [timeSort, setTimeSort] = useState("asc");
   const itemsPerPage = 9;
 
   useEffect(() => {
@@ -54,11 +61,23 @@ const RecipeGrid = ({ searchQuery }) => {
     }
   };
 
-  const filteredRecipes = recipes.filter(
-    (recipe) =>
-      recipe.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      recipe.summary.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const filteredRecipes = recipes
+    .filter(
+      (recipe) =>
+        recipe.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        recipe.summary.toLowerCase().includes(searchQuery.toLowerCase()),
+    )
+    .filter((recipe) => {
+      if (dietFilter === "vegetarian") return recipe.vegan;
+      if (dietFilter === "non-vegetarian") return !recipe.vegan;
+      return true;
+    })
+    .sort((a, b) => {
+      if (timeSort === "asc") {
+        return a.readyInMinutes - b.readyInMinutes;
+      }
+      return b.readyInMinutes - a.readyInMinutes;
+    });
 
   const totalPages = Math.ceil(filteredRecipes.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -138,6 +157,18 @@ const RecipeGrid = ({ searchQuery }) => {
     }
   };
 
+  const handleDietFilter = (event, newDiet) => {
+    if (newDiet !== null) {
+      setDietFilter(newDiet);
+      setCurrentPage(1);
+    }
+  };
+
+  const handleTimeSort = () => {
+    setTimeSort((prev) => (prev === "asc" ? "desc" : "asc"));
+    setCurrentPage(1);
+  };
+
   return (
     <Box
       sx={{
@@ -154,13 +185,79 @@ const RecipeGrid = ({ searchQuery }) => {
           textAlign: "center",
           color: "#2c3e50",
           mb: { xs: 2, sm: 3 },
-          fontSize: { xs: "1.5rem", sm: "2rem" }, // Smaller on mobile
+          fontSize: { xs: "1.5rem", sm: "2rem" },
         }}
       >
         {searchQuery
           ? `Search Results for "${searchQuery}"`
           : "🍽️ Explore Delicious Recipes"}
       </Typography>
+
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 4,
+          gap: 2,
+        }}
+      >
+        <ToggleButtonGroup
+          value={dietFilter}
+          exclusive
+          onChange={handleDietFilter}
+          aria-label="diet filter"
+          sx={{ flexWrap: "wrap", justifyContent: "center" }}
+        >
+          <ToggleButton
+            value="all"
+            sx={{
+              px: 3,
+              py: 1,
+              fontSize: { xs: "0.8rem", sm: "0.9rem" },
+            }}
+          >
+            All
+          </ToggleButton>
+          <ToggleButton
+            value="vegetarian"
+            sx={{
+              px: 3,
+              py: 1,
+              fontSize: { xs: "0.8rem", sm: "0.9rem" },
+            }}
+          >
+            Vegetarian
+          </ToggleButton>
+          <ToggleButton
+            value="non-vegetarian"
+            sx={{
+              px: 3,
+              py: 1,
+              fontSize: { xs: "0.8rem", sm: "0.9rem" },
+            }}
+          >
+            Non-Vegetarian
+          </ToggleButton>
+        </ToggleButtonGroup>
+
+        <Button
+          variant="outlined"
+          onClick={handleTimeSort}
+          startIcon={
+            timeSort === "asc" ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />
+          }
+          sx={{
+            textTransform: "none",
+            fontSize: { xs: "0.8rem", sm: "0.9rem" },
+            px: 3,
+            py: 1,
+          }}
+        >
+          Sort by Time
+        </Button>
+      </Box>
 
       <Grid container spacing={{ xs: 2, sm: 3 }} justifyContent="center">
         {status === "loading" ? (
@@ -192,8 +289,8 @@ const RecipeGrid = ({ searchQuery }) => {
                   boxShadow: 3,
                   transition: {
                     sm: "transform 0.3s ease-in-out, box-shadow 0.3s",
-                  }, // Disable hover on mobile
-                  "&:hover": { sm: { transform: "scale(1.03)", boxShadow: 5 } }, // Apply only on sm+
+                  },
+                  "&:hover": { sm: { transform: "scale(1.03)", boxShadow: 5 } },
                   height: "100%",
                   display: "flex",
                   flexDirection: "column",
@@ -205,7 +302,7 @@ const RecipeGrid = ({ searchQuery }) => {
               >
                 <CardMedia
                   component="img"
-                  height={{ xs: 150, sm: 200 }} // Smaller image on mobile
+                  height={{ xs: 150, sm: 200 }}
                   image={recipe.image}
                   alt={recipe.title}
                   sx={{
@@ -246,7 +343,7 @@ const RecipeGrid = ({ searchQuery }) => {
                       textTransform: "uppercase",
                       fontWeight: "bold",
                       letterSpacing: 1,
-                      color: "#d32f2f",
+                      color: recipe.vegan ? "#4caf50" : "#d32f2f", // Green for Vegetarian, original red for Non-Vegetarian
                       fontSize: { xs: "0.7rem", sm: "0.75rem" },
                     }}
                   >
@@ -313,7 +410,7 @@ const RecipeGrid = ({ searchQuery }) => {
               fontSize: { xs: "1rem", sm: "1.125rem" },
             }}
           >
-            No recipes found for "{searchQuery}".
+            No recipes found.
           </Typography>
         )}
       </Grid>
@@ -354,15 +451,15 @@ const RecipeGrid = ({ searchQuery }) => {
         >
           <button
             style={{
-              padding: { xs: "8px 16px", sm: "10px 20px" },
+              padding: "10px 20px",
               border: "none",
               backgroundColor: "#ff6f61",
               color: "white",
-              fontSize: { xs: "0.9rem", sm: "1rem" },
+              fontSize: "1rem",
               borderRadius: "5px",
               cursor: "pointer",
               opacity: currentPage === 1 ? 0.6 : 1,
-              minWidth: "100px", // Easier to tap on mobile
+              minWidth: "100px",
             }}
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
@@ -377,11 +474,11 @@ const RecipeGrid = ({ searchQuery }) => {
           </Typography>
           <button
             style={{
-              padding: { xs: "8px 16px", sm: "10px 20px" },
+              padding: "10px 20px",
               border: "none",
               backgroundColor: "#ff6f61",
               color: "white",
-              fontSize: { xs: "0.9rem", sm: "1rem" },
+              fontSize: "1rem",
               borderRadius: "5px",
               cursor: "pointer",
               opacity: currentPage === totalPages ? 0.6 : 1,
