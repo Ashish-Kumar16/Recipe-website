@@ -62,7 +62,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://your-netlify-app.netlify.app", 
+      "https://search-intresting-recipes.netlify.app/",
     ],
     credentials: true,
   }),
