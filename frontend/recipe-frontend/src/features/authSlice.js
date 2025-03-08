@@ -17,7 +17,7 @@ export const loginUser = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Login failed");
     }
-  },
+  }
 );
 
 export const registerUser = createAsyncThunk(
@@ -33,10 +33,10 @@ export const registerUser = createAsyncThunk(
       return response.data;
     } catch (err) {
       return rejectWithValue(
-        err.response?.data?.message || "Registration failed",
+        err.response?.data?.message || "Registration failed"
       );
     }
-  },
+  }
 );
 
 export const fetchUserProfile = createAsyncThunk(
@@ -51,16 +51,16 @@ export const fetchUserProfile = createAsyncThunk(
     } catch (err) {
       localStorage.removeItem("token"); // Clear invalid token
       return rejectWithValue(
-        err.response?.data?.message || "Failed to fetch profile",
+        err.response?.data?.message || "Failed to fetch profile"
       );
     }
-  },
+  }
 );
 
 const initialState = {
   user: null,
   token: localStorage.getItem("token") || null,
-  isAuthenticated: !!localStorage.getItem("token"),
+  isAuthenticated: !!localStorage.getItem("token"), // Initially set based on token presence
   loading: false,
   error: null,
 };
