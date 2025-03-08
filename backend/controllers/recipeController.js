@@ -5,32 +5,35 @@ const mongoose = require("mongoose");
 
 const SPOONACULAR_API_BASE = "https://api.spoonacular.com/recipes";
 
-// Array of API keys from environment variables
 const API_KEYS = [
   process.env.SPOONACULAR_API_KEY_1,
   process.env.SPOONACULAR_API_KEY_2,
   process.env.SPOONACULAR_API_KEY_3,
-].filter(Boolean); // Filter out undefined/null values
+].filter(Boolean);
 
-// Helper function to make API calls with fallback
 const fetchFromSpoonacular = async (url) => {
   for (const apiKey of API_KEYS) {
     try {
-      const response = await axios.get(`${url}&apiKey=${apiKey}`);
-      return response.data; // Return data if successful
+      const fullUrl = `${url}?apiKey=${apiKey}`;
+      console.log(`Attempting fetch from: ${fullUrl}`);
+      const response = await axios.get(fullUrl);
+      console.log(`Success with API key ${apiKey} for URL: ${fullUrl}`);
+      return response.data;
     } catch (error) {
-      console.error(`API key ${apiKey} failed: ${error.message}`);
+      console.error(`API key ${apiKey} failed:`, {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
       if (error.response?.status === 402 || error.response?.status === 429) {
-        // 402: Payment Required (quota exceeded), 429: Too Many Requests
-        continue; // Try the next key
+        continue;
       }
-      throw error; // Other errors (e.g., 404, 500) should stop the loop
+      throw error;
     }
   }
   throw new Error("All API keys exhausted or failed");
 };
 
-// Get all random recipes
 exports.getAllRecipes = async (req, res) => {
   try {
     if (API_KEYS.length === 0) {
@@ -40,6 +43,10 @@ exports.getAllRecipes = async (req, res) => {
     const data = await fetchFromSpoonacular(
       `${SPOONACULAR_API_BASE}/random?number=10`,
     );
+    console.log(
+      "Random recipe IDs:",
+      data.recipes.map((r) => r.id),
+    );
     res.status(200).json(data.recipes);
   } catch (error) {
     console.error("Error fetching random recipes:", error.message);
@@ -47,7 +54,38 @@ exports.getAllRecipes = async (req, res) => {
   }
 };
 
-// Get saved recipes (unchanged)
+exports.getRecipeById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log("Requested recipe ID:", id);
+    if (!id || isNaN(id)) {
+      console.log("Invalid ID received:", id);
+      return res.status(400).json({ error: "Valid recipe ID is required" });
+    }
+    if (API_KEYS.length === 0) {
+      console.log("No API keys configured");
+      return res.status(500).json({ error: "No API keys configured" });
+    }
+
+    const url = `${SPOONACULAR_API_BASE}/${id}/information`;
+    console.log("Constructed URL base:", url);
+    const data = await fetchFromSpoonacular(url);
+    console.log("Fetched recipe ID:", data.id);
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error in getRecipeById:", {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+    });
+    if (error.response?.status === 404) {
+      return res.status(404).json({ error: "Recipe not found" });
+    }
+    res.status(500).json({ error: "Failed to fetch recipe details" });
+  }
+};
+
+// Other functions remain unchanged
 exports.getSavedRecipes = async (req, res) => {
   try {
     const userId = req.user.id || req.user._id;
@@ -69,7 +107,6 @@ exports.getSavedRecipes = async (req, res) => {
   }
 };
 
-// Update saved recipes order (unchanged)
 exports.updateSavedRecipesOrder = async (req, res) => {
   try {
     const { recipeIds } = req.body;
@@ -109,7 +146,6 @@ exports.updateSavedRecipesOrder = async (req, res) => {
   }
 };
 
-// Search recipes
 exports.searchRecipe = async (req, res) => {
   try {
     const { query } = req.query;
@@ -134,7 +170,6 @@ exports.searchRecipe = async (req, res) => {
   }
 };
 
-// Save recipe (unchanged)
 exports.saveRecipe = async (req, res) => {
   try {
     const { recipeId, title, image, vegan, readyInMinutes } = req.body;
@@ -179,31 +214,6 @@ exports.saveRecipe = async (req, res) => {
   }
 };
 
-// Get recipe by ID
-exports.getRecipeById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (!id || isNaN(id)) {
-      return res.status(400).json({ error: "Valid recipe ID is required" });
-    }
-    if (API_KEYS.length === 0) {
-      return res.status(500).json({ error: "No API keys configured" });
-    }
-
-    const data = await fetchFromSpoonacular(
-      `${SPOONACULAR_API_BASE}/${id}/information`,
-    );
-    res.status(200).json(data);
-  } catch (error) {
-    console.error("Error fetching recipe details:", error.message);
-    if (error.response?.status === 404) {
-      return res.status(404).json({ error: "Recipe not found" });
-    }
-    res.status(500).json({ error: "Failed to fetch recipe details" });
-  }
-};
-
-// Delete saved recipe (unchanged)
 exports.deleteSavedRecipe = async (req, res) => {
   try {
     const { recipeId } = req.params;
