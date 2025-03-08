@@ -147,8 +147,8 @@ const RecipeGrid = ({ searchQuery }) => {
 
   // Debug mobile layout
   useEffect(() => {
-    console.log("Screen width:", window.innerWidth);
-    console.log("Current recipes:", currentRecipes.length);
+    // console.log("Screen width:", window.innerWidth);
+    // console.log("Current recipes:", currentRecipes.length);
   }, [currentRecipes]);
 
   return (
