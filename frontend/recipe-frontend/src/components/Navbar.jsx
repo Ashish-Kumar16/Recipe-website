@@ -22,7 +22,6 @@ import {
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../features/authSlice";
-import NavbarSkeleton from "./NavbarSkeleton";
 import AuthCard from "./AuthCard";
 
 const Navbar = ({ onSearch, totalPages = 1 }) => {
@@ -240,6 +239,7 @@ const Navbar = ({ onSearch, totalPages = 1 }) => {
           )}
         </Toolbar>
 
+        {/* Rest of the Navbar JSX remains unchanged */}
         <Box
           sx={{
             display: "flex",
