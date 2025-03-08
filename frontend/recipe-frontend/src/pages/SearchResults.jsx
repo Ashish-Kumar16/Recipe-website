@@ -5,7 +5,6 @@ import { Typography, Box } from "@mui/material";
 
 const SearchResults = ({ searchQuery: propSearchQuery }) => {
   const [searchParams] = useSearchParams();
-  // Use prop if provided (from Home), otherwise use URL query
   const searchQuery = propSearchQuery || searchParams.get("query") || "";
 
   return (

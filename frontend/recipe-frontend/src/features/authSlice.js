@@ -17,7 +17,7 @@ export const loginUser = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Login failed");
     }
-  }
+  },
 );
 
 export const registerUser = createAsyncThunk(
@@ -33,10 +33,10 @@ export const registerUser = createAsyncThunk(
       return response.data;
     } catch (err) {
       return rejectWithValue(
-        err.response?.data?.message || "Registration failed"
+        err.response?.data?.message || "Registration failed",
       );
     }
-  }
+  },
 );
 
 export const fetchUserProfile = createAsyncThunk(
@@ -47,20 +47,21 @@ export const fetchUserProfile = createAsyncThunk(
       if (!token) throw new Error("No token found");
       const config = { headers: { Authorization: `Bearer ${token}` } };
       const response = await axios.get(`${API_URL}/profile`, config);
+      console.log("fetchUserProfile response:", response.data);
       return response.data;
     } catch (err) {
-      localStorage.removeItem("token"); // Clear invalid token
+      localStorage.removeItem("token");
       return rejectWithValue(
-        err.response?.data?.message || "Failed to fetch profile"
+        err.response?.data?.message || "Failed to fetch profile",
       );
     }
-  }
+  },
 );
 
 const initialState = {
   user: null,
   token: localStorage.getItem("token") || null,
-  isAuthenticated: !!localStorage.getItem("token"), // Initially set based on token presence
+  isAuthenticated: !!localStorage.getItem("token"),
   loading: false,
   error: null,
 };
@@ -80,7 +81,8 @@ const authSlice = createSlice({
     setAuth: (state, action) => {
       state.isAuthenticated = true;
       state.token = action.payload.token;
-      state.user = action.payload.user || {};
+      state.user = action.payload.user;
+      console.log("setAuth called:", action.payload);
     },
   },
   extraReducers: (builder) => {
@@ -92,7 +94,7 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
         state.token = action.payload.token;
-        state.user = action.payload.user || action.payload; // Adjust based on API response
+        state.user = action.payload.user || action.payload;
         state.isAuthenticated = true;
         toast.success("Login successful!");
       })
@@ -127,6 +129,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload;
         state.isAuthenticated = true;
+        console.log("fetchUserProfile fulfilled:", action.payload);
       })
       .addCase(fetchUserProfile.rejected, (state, action) => {
         state.loading = false;

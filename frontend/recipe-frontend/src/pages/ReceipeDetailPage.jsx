@@ -7,7 +7,7 @@ import { Box, Container } from "@mui/material";
 const ReceipeDetail = () => {
   return (
     <>
-      <Navbar />
+      {/* <Navbar /> */}
       <Box sx={{ display: "flex", justifyContent: "center" }}>
         <Container sx={{ width: "75%" }}>
           <RecipeDetail />

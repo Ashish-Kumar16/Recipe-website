@@ -16,7 +16,7 @@ const SavedRecipesPage = () => {
       }}
     >
       {/* Navbar */}
-      <Navbar />
+      {/* <Navbar /> */}
 
       {/* Saved Recipes Content */}
       <Container

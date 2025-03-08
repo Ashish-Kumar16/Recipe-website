@@ -37,6 +37,13 @@ const Navbar = ({ onSearch, totalPages = 1 }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  console.log(
+    "Navbar render - isAuthenticated:",
+    isAuthenticated,
+    "user:",
+    user,
+  );
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -203,23 +210,25 @@ const Navbar = ({ onSearch, totalPages = 1 }) => {
                     {text}
                     {text === "Saved Recipe" && ` (${savedRecipes.length})`}
                   </Link>
-                )
+                ),
               )}
             </Box>
           )}
 
           {!isMobile && (
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              {isAuthenticated && user ? (
+              {isAuthenticated ? (
                 <IconButton onClick={handleProfileClick}>
                   <Avatar
                     sx={{ bgcolor: "#ff7043" }}
-                    alt={user.name || user.email}
+                    alt={user?.name || user?.email || "User"}
                     src="/broken-image.jpg"
                   >
-                    {user.name
+                    {user?.name
                       ? user.name[0].toUpperCase()
-                      : user.email[0].toUpperCase()}
+                      : user?.email
+                      ? user.email[0].toUpperCase()
+                      : "U"}
                   </Avatar>
                 </IconButton>
               ) : (
@@ -239,7 +248,6 @@ const Navbar = ({ onSearch, totalPages = 1 }) => {
           )}
         </Toolbar>
 
-        {/* Rest of the Navbar JSX remains unchanged */}
         <Box
           sx={{
             display: "flex",

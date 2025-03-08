@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import Navbar from "../components/Navbar";
 import RecipeGrid from "../components/RecipeGrid";
 import Footer from "../components/Footer";
 import SearchResults from "../pages/SearchResults";
@@ -13,14 +12,12 @@ const Home = () => {
   const handleSearch = (query, page) => {
     setSearchQuery(query);
     setCurrentPage(page);
-    // Example: Replace with actual logic from SearchResults
     const fetchedTotalPages = 5; // Simulate total pages
     setTotalPages(fetchedTotalPages);
   };
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      <Navbar onSearch={handleSearch} totalPages={totalPages} />
       <Box sx={{ flex: 1, display: "flex", justifyContent: "center" }}>
         <Container sx={{ width: "75%", py: 2 }}>
           {searchQuery.trim() ? (
