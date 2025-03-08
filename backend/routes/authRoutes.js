@@ -31,7 +31,7 @@ router.get(
         expiresIn: "1h",
       });
       console.log("Google callback successful, redirecting with token:", token);
-      res.redirect(`http://localhost:5173/oauth/callback?token=${token}`);
+      res.redirect(`https://search-intresting-recipes.netlify.app/oauth/callback?token=${token}`);
     } catch (err) {
       console.error("Error in Google callback:", err);
       res.status(500).json({ error: "Something went wrong!" });
