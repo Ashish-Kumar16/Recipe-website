@@ -10,7 +10,8 @@ import SearchResults from "./pages/SearchResults";
 import SavedRecipes from "./pages/SavedRecipePage";
 import OAuthCallback from "./components/OAuthCallback";
 import { parseJwt } from "./utils/jwt";
-import NavbarSkeleton from "./components/NavbarSkeleton"; // Add this for loading state
+import Navbar from "./components/Navbar"; // Ensure path is correct
+import NavbarSkeleton from "./components/NavbarSkeleton";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -19,30 +20,31 @@ const App = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+    console.log("App useEffect - Token:", token, "isAuthenticated:", isAuthenticated);
     if (token && !isAuthenticated) {
       const userData = parseJwt(token);
       if (userData) {
-        // Set initial auth state from token
         dispatch(setAuth({ token, user: userData }));
-        // Validate with backend
-        dispatch(fetchUserProfile()).finally(() => {
-          setIsRestoringAuth(false); // Resolve loading state after fetch completes
-        });
+        dispatch(fetchUserProfile())
+          .unwrap()
+          .then(() => console.log("Profile fetch succeeded"))
+          .catch((err) => console.error("Profile fetch failed:", err))
+          .finally(() => setIsRestoringAuth(false));
       } else {
-        setIsRestoringAuth(false); // Invalid token, no need to wait
+        setIsRestoringAuth(false);
       }
     } else {
-      setIsRestoringAuth(false); // No token or already authenticated
+      setIsRestoringAuth(false);
     }
   }, [dispatch, isAuthenticated]);
 
-  // Show loading state until auth is fully restored
   if (isRestoringAuth || authLoading) {
     return <NavbarSkeleton />;
   }
 
   return (
     <BrowserRouter>
+      <Navbar onSearch={(query) => console.log(query)} />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/recipe/:id" element={<RecipeDetail />} />
