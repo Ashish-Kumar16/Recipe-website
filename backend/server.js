@@ -36,6 +36,7 @@ const store = new MongoDBStore({
 
 // Initialize Express
 const app = express();
+app.set("trust proxy", 1); // Trust Render's proxy
 
 // Rate limiters
 const authLimiter = rateLimit({
@@ -56,18 +57,26 @@ const recipeLimiter = rateLimit({
 
 // Middleware
 app.use(express.json());
-
-// CORS for local dev & production
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://search-intresting-recipes.netlify.app",
-    ],
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        "http://localhost:5173",
+        "https://search-intresting-recipes.netlify.app",
+      ];
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        origin.endsWith("--search-intresting-recipes.netlify.app")
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   }),
 );
-
 app.use(helmet());
 app.use(morgan("dev"));
 
@@ -107,17 +116,8 @@ const server = app.listen(PORT, () => {
 
 // Graceful shutdown
 process.on("SIGINT", () => {
-  console.log("Shutting down server...");
-  server.close(() => {
-    console.log("Server closed.");
-    process.exit(0);
-  });
+  server.close(() => process.exit(0));
 });
-
 process.on("SIGTERM", () => {
-  console.log("Shutting down server...");
-  server.close(() => {
-    console.log("Server closed.");
-    process.exit(0);
-  });
+  server.close(() => process.exit(0));
 });
