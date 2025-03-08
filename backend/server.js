@@ -11,7 +11,7 @@ const passport = require("./config/passport");
 
 dotenv.config();
 
-// Ensure required environment variables exist
+// Validate environment variables
 const requiredEnvVars = [
   "MONGO_URI",
   "JWT_SECRET",
@@ -34,9 +34,8 @@ const store = new MongoDBStore({
   collection: "sessions",
 });
 
-// Initialize Express
 const app = express();
-app.set("trust proxy", 1); // Trust Render's proxy
+app.set("trust proxy", 1);
 
 // Rate limiters
 const authLimiter = rateLimit({
@@ -64,23 +63,26 @@ app.use(
         "http://localhost:5173",
         "https://search-intresting-recipes.netlify.app",
       ];
+      // Allow all Netlify preview URLs and local development
       if (
-        !origin ||
+        !origin || // Allow non-browser requests (e.g., Postman)
         allowedOrigins.includes(origin) ||
-        origin.endsWith("--search-intresting-recipes.netlify.app")
+        origin.endsWith(".netlify.app") // Allow Netlify preview deployments
       ) {
         callback(null, true);
       } else {
+        console.log(`CORS rejected origin: ${origin}`);
         callback(new Error("Not allowed by CORS"));
       }
     },
-    credentials: true,
-  }),
+    credentials: true, // Allow cookies/authorization headers
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Explicitly allow methods
+    allowedHeaders: ["Content-Type", "Authorization"], // Allow these headers
+  })
 );
 app.use(helmet());
 app.use(morgan("dev"));
 
-// Use MongoDB for session store
 app.use(
   session({
     secret: process.env.JWT_SECRET,
@@ -90,9 +92,9 @@ app.use(
     cookie: {
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24, // 1 day
+      maxAge: 1000 * 60 * 60 * 24,
     },
-  }),
+  })
 );
 
 app.use(passport.initialize());
@@ -114,10 +116,5 @@ const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-// Graceful shutdown
-process.on("SIGINT", () => {
-  server.close(() => process.exit(0));
-});
-process.on("SIGTERM", () => {
-  server.close(() => process.exit(0));
-});
+process.on("SIGINT", () => server.close(() => process.exit(0)));
+process.on("SIGTERM", () => server.close(() => process.exit(0)));
