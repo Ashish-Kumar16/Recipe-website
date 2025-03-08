@@ -1,0 +1,6 @@
+body {
+  overflow: auto !important; /* Ensure body doesn’t restrict dragging */
+}
+.draggable-list {
+  position: relative; /* Ensure list is positioned correctly */
+}
