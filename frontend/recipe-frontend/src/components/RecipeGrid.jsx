@@ -343,7 +343,7 @@ const RecipeGrid = ({ searchQuery }) => {
                       textTransform: "uppercase",
                       fontWeight: "bold",
                       letterSpacing: 1,
-                      color: recipe.vegan ? "#4caf50" : "#d32f2f", // Green for Vegetarian, original red for Non-Vegetarian
+                      color: recipe.vegan ? "#4caf50" : "#d32f2f",
                       fontSize: { xs: "0.7rem", sm: "0.75rem" },
                     }}
                   >
@@ -421,7 +421,10 @@ const RecipeGrid = ({ searchQuery }) => {
             color="error"
             sx={{ fontSize: { xs: "1rem", sm: "1.2rem" } }}
           >
-            ⚠️ {error}
+            ⚠️{" "}
+            {typeof error === "string"
+              ? error
+              : error?.error || "An error occurred"}
           </Typography>
           <button
             style={{
