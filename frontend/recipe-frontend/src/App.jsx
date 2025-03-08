@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom"; // Should work with Vite
 import { useDispatch, useSelector } from "react-redux";
 import { setAuth, fetchUserProfile, logout } from "./features/authSlice";
 import Home from "./pages/Home";
-import RecipeDetail from "./pages/ReceipeDetailPage"; // Corrected to match file name
+import RecipeDetail from "./pages/ReceipeDetailPage";
 import SearchResults from "./pages/SearchResults";
 import SavedRecipes from "./pages/SavedRecipePage";
 import OAuthCallback from "./components/OAuthCallback";
