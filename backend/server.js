@@ -5,11 +5,13 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const morgan = require("morgan");
 const session = require("express-session");
+const MongoDBStore = require("connect-mongodb-session")(session);
 const connectDB = require("./config/db");
 const passport = require("./config/passport");
 
 dotenv.config();
 
+// Ensure required environment variables exist
 const requiredEnvVars = [
   "MONGO_URI",
   "JWT_SECRET",
@@ -23,63 +25,87 @@ for (const envVar of requiredEnvVars) {
   }
 }
 
+// Connect to MongoDB
 connectDB();
 
+// Setup MongoDB session store
+const store = new MongoDBStore({
+  uri: process.env.MONGO_URI,
+  collection: "sessions",
+});
+
+// Initialize Express
 const app = express();
 
+// Rate limiters
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 50, // 50 requests per 15 minutes
+  windowMs: 15 * 60 * 1000,
+  max: 50,
   message: { error: "Too many auth attempts, please try again later" },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
 const recipeLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 200, // 200 requests per minute
+  windowMs: 1 * 60 * 1000,
+  max: 200,
   message: { error: "Too many recipe requests, please slow down" },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
+// Middleware
 app.use(express.json());
-app.use(cors({ origin: "http://localhost:5173" }));
+
+// CORS for local dev & production
 app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        mediaSrc: ["'self'", "data:"],
-      },
-    },
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://your-netlify-app.netlify.app", 
+    ],
+    credentials: true,
   }),
 );
+
+app.use(helmet());
 app.use(morgan("dev"));
+
+// Use MongoDB for session store
 app.use(
   session({
     secret: process.env.JWT_SECRET,
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false }, // Set to true in production with HTTPS
+    store: store,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24, // 1 day
+    },
   }),
 );
+
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Routes
 app.use("/api/auth", authLimiter, require("./routes/authRoutes"));
 app.use("/api/recipes", recipeLimiter, require("./routes/recipeRoutes"));
 
+// Global error handler
 app.use((err, req, res, next) => {
   console.error("Error:", err.stack);
   res.status(500).json({ error: "Something went wrong!" });
 });
 
+// Start server
 const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
+// Graceful shutdown
 process.on("SIGINT", () => {
   console.log("Shutting down server...");
   server.close(() => {
