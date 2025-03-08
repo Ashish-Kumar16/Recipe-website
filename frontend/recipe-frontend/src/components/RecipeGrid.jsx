@@ -28,7 +28,7 @@ const RecipeGrid = ({ searchQuery }) => {
   } = useSelector((state) => state.recipes);
   const { isAuthenticated = false } = useSelector((state) => state.auth || {});
   const [currentPage, setCurrentPage] = useState(1);
-  const [savedRecipes, setSavedRecipes] = useState([]); // Store recipe IDs
+  const [savedRecipes, setSavedRecipes] = useState([]);
   const itemsPerPage = 9;
 
   useEffect(() => {
@@ -43,12 +43,11 @@ const RecipeGrid = ({ searchQuery }) => {
   const fetchSavedRecipes = async () => {
     try {
       const response = await axios.get(
-        "https://recipe-website-arnr.onrender.com/api/recipes/saved", // Corrected endpoint
+        "https://recipe-website-arnr.onrender.com/api/recipes/saved",
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        },
+        }
       );
-      // Assuming response.data is an array of recipe objects with _id and recipeId
       setSavedRecipes(response.data.map((recipe) => recipe.recipeId));
     } catch (err) {
       console.error("Failed to fetch saved recipes:", err);
@@ -58,7 +57,7 @@ const RecipeGrid = ({ searchQuery }) => {
   const filteredRecipes = recipes.filter(
     (recipe) =>
       recipe.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      recipe.summary.toLowerCase().includes(searchQuery.toLowerCase()),
+      recipe.summary.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const totalPages = Math.ceil(filteredRecipes.length / itemsPerPage);
@@ -92,7 +91,7 @@ const RecipeGrid = ({ searchQuery }) => {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        },
+        }
       );
 
       setSavedRecipes((prev) => [...prev, recipe.id]);
@@ -105,15 +104,14 @@ const RecipeGrid = ({ searchQuery }) => {
 
   const handleDeleteRecipe = async (recipeId) => {
     try {
-      // Find the saved recipe's MongoDB _id by fetching saved recipes or matching recipeId
       const savedRecipeResponse = await axios.get(
         "https://recipe-website-arnr.onrender.com/api/recipes/saved",
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        },
+        }
       );
       const savedRecipe = savedRecipeResponse.data.find(
-        (r) => r.recipeId === recipeId,
+        (r) => r.recipeId === recipeId
       );
       if (!savedRecipe) {
         throw new Error("Saved recipe not found");
@@ -123,7 +121,7 @@ const RecipeGrid = ({ searchQuery }) => {
         `https://recipe-website-arnr.onrender.com/api/recipes/saved/${savedRecipe._id}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        },
+        }
       );
 
       setSavedRecipes((prev) => prev.filter((id) => id !== recipeId));
@@ -165,7 +163,7 @@ const RecipeGrid = ({ searchQuery }) => {
       <Grid container spacing={3} justifyContent="center">
         {status === "loading"
           ? [...Array(itemsPerPage)].map((_, index) => (
-              <Grid item xs={12} sm={6} md={4} key={index}>
+              <Grid item xs={6} sm={6} md={4} key={index}>
                 <Card sx={{ borderRadius: 2, boxShadow: 2, height: "100%" }}>
                   <Skeleton variant="rectangular" height={200} />
                   <CardContent>
@@ -184,7 +182,7 @@ const RecipeGrid = ({ searchQuery }) => {
               </Grid>
             ))
           : currentRecipes.map((recipe) => (
-              <Grid item xs={12} sm={6} md={4} key={recipe.id}>
+              <Grid item xs={6} sm={6} md={4} key={recipe.id}>
                 <Card
                   sx={{
                     borderRadius: 3,
