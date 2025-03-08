@@ -43,7 +43,7 @@ const RecipeGrid = ({ searchQuery }) => {
   const fetchSavedRecipes = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/recipes/saved", // Corrected endpoint
+        "https://recipe-website-arnr.onrender.com/api/recipes/saved", // Corrected endpoint
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         },
@@ -86,7 +86,7 @@ const RecipeGrid = ({ searchQuery }) => {
       };
 
       const response = await axios.post(
-        "http://localhost:5000/api/recipes/save",
+        "https://recipe-website-arnr.onrender.com/api/recipes/save",
         recipeData,
         {
           headers: {
@@ -107,7 +107,7 @@ const RecipeGrid = ({ searchQuery }) => {
     try {
       // Find the saved recipe's MongoDB _id by fetching saved recipes or matching recipeId
       const savedRecipeResponse = await axios.get(
-        "http://localhost:5000/api/recipes/saved",
+        "https://recipe-website-arnr.onrender.com/api/recipes/saved",
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         },
@@ -120,7 +120,7 @@ const RecipeGrid = ({ searchQuery }) => {
       }
 
       await axios.delete(
-        `http://localhost:5000/api/recipes/saved/${savedRecipe._id}`,
+        `https://recipe-website-arnr.onrender.com/api/recipes/saved/${savedRecipe._id}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         },

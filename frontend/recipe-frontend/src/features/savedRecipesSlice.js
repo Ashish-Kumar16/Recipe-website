@@ -9,7 +9,7 @@ export const fetchSavedRecipes = createAsyncThunk(
       if (!token) throw new Error("No authentication token found");
 
       const response = await axios.get(
-        "http://localhost:5000/api/recipes/saved",
+        "https://recipe-website-arnr.onrender.com/api/recipes/saved",
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -30,7 +30,7 @@ export const updateRecipeOrder = createAsyncThunk(
 
       const recipeIds = reorderedRecipes.map((recipe) => recipe._id);
       const response = await axios.put(
-        "http://localhost:5000/api/recipes/saved/order",
+        "https://recipe-website-arnr.onrender.com/api/recipes/saved/order",
         { recipeIds },
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -49,7 +49,7 @@ export const deleteRecipe = createAsyncThunk(
       if (!token) throw new Error("No authentication token found");
 
       await axios.delete(
-        `http://localhost:5000/api/recipes/saved/${recipeId}`,
+        `https://recipe-website-arnr.onrender.com/api/recipes/saved/${recipeId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },

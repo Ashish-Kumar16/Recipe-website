@@ -3,7 +3,9 @@ import axios from "axios";
 
 // Async Thunk to Fetch All Recipes
 export const fetchRecipes = createAsyncThunk("recipes/fetchRecipes", async () => {
-  const response = await axios.get("http://localhost:5000/api/recipes");
+  const response = await axios.get(
+    "https://recipe-website-arnr.onrender.com/api/recipes",
+  );
   return response.data;
 });
 
@@ -11,7 +13,9 @@ export const fetchRecipes = createAsyncThunk("recipes/fetchRecipes", async () =>
 export const fetchRecipeById = createAsyncThunk(
   "recipes/fetchRecipeById",
   async (id) => {
-    const response = await axios.get(`http://localhost:5000/api/recipes/${id}`); // Adjust endpoint as needed
+    const response = await axios.get(
+      `https://recipe-website-arnr.onrender.com/api/recipes/${id}`,
+    ); // Adjust endpoint as needed
     return response.data;
   },
 );

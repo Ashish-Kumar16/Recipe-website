@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import { toast } from "react-toastify";
 
-const API_URL = "http://localhost:5000/api/auth";
+const API_URL = "https://recipe-website-arnr.onrender.com/api/auth";
 
 export const loginUser = createAsyncThunk(
   "auth/login",

@@ -198,7 +198,7 @@ const AuthCard = ({ open, onClose }) => {
           </Box>
         </Typography>
         <GoogleButton
-          href="http://localhost:5000/api/auth/google"
+          href="https://recipe-website-arnr.onrender.com/api/auth/google"
           startIcon={
             <svg
               width="18"
@@ -227,7 +227,6 @@ const AuthCard = ({ open, onClose }) => {
         >
           Sign in with Google
         </GoogleButton>
-       
       </DialogContent>
       <DialogActions sx={{ padding: 2 }}>
         <Button
