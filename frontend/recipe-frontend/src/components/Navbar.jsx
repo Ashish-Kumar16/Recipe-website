@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   AppBar,
   Box,
@@ -26,34 +26,20 @@ import NavbarSkeleton from "./NavbarSkeleton";
 import AuthCard from "./AuthCard";
 
 const Navbar = ({ onSearch, totalPages = 1 }) => {
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [anchorEl, setAnchorEl] = useState(null); // For profile dropdown
-  const [menuAnchorEl, setMenuAnchorEl] = useState(null); // For mobile menu
-  const [openAuth, setOpenAuth] = useState(false); // For AuthCard dialog
-  const [page, setPage] = useState(1); // Pagination state
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [menuAnchorEl, setMenuAnchorEl] = useState(null);
+  const [openAuth, setOpenAuth] = useState(false);
+  const [page, setPage] = useState(1);
+
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const { data: savedRecipes } = useSelector((state) => state.savedRecipes);
+  const dispatch = useDispatch();
   const location = useLocation();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-
-  const { isAuthenticated, user, loading: authLoading } = useSelector(
-    (state) => state.auth
-  );
-  const { data: savedRecipes } = useSelector((state) => state.savedRecipes);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
-  useEffect(() => {
-    // Wait for auth state to resolve
-    if (!authLoading) {
-      setLoading(false);
-    }
-  }, [authLoading]);
-
-  if (loading) {
-    return <NavbarSkeleton />;
-  }
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -223,7 +209,6 @@ const Navbar = ({ onSearch, totalPages = 1 }) => {
             </Box>
           )}
 
-          {/* Updated Top-Right Corner */}
           {!isMobile && (
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               {isAuthenticated && user ? (
