@@ -14,7 +14,8 @@ const API_KEYS = [
 const fetchFromSpoonacular = async (url) => {
   for (const apiKey of API_KEYS) {
     try {
-      const fullUrl = `${url}?apiKey=${apiKey}`;
+      const separator = url.includes("?") ? "&" : "?";
+      const fullUrl = `${url}${separator}apiKey=${apiKey}`;
       console.log(`Attempting fetch from: ${fullUrl}`);
       const response = await axios.get(fullUrl);
       console.log(`Success with API key ${apiKey} for URL: ${fullUrl}`);
@@ -85,7 +86,6 @@ exports.getRecipeById = async (req, res) => {
   }
 };
 
-// Other functions remain unchanged
 exports.getSavedRecipes = async (req, res) => {
   try {
     const userId = req.user.id || req.user._id;
