@@ -235,19 +235,17 @@ const Navbar = ({ onSearch, totalPages = 1 }) => {
                   </Avatar>
                 </IconButton>
               ) : (
-                <>
-                  <Typography
-                    sx={{
-                      fontSize: "1.1rem",
-                      color: "#ff7043",
-                      cursor: "pointer",
-                      "&:hover": { textDecoration: "underline" },
-                    }}
-                    onClick={() => setOpenAuth(true)} // Open AuthCard for Sign In
-                  >
-                    login
-                  </Typography>
-                </>
+                <Typography
+                  sx={{
+                    fontSize: "1.1rem",
+                    color: "#ff7043",
+                    cursor: "pointer",
+                    "&:hover": { textDecoration: "underline" },
+                  }}
+                  onClick={() => setOpenAuth(true)} // Open AuthCard for Sign In
+                >
+                  login
+                </Typography>
               )}
             </Box>
           )}
