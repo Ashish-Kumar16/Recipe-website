@@ -145,6 +145,12 @@ const RecipeGrid = ({ searchQuery }) => {
     }
   };
 
+  // Debug mobile layout
+  useEffect(() => {
+    console.log("Screen width:", window.innerWidth);
+    console.log("Current recipes:", currentRecipes.length);
+  }, [currentRecipes]);
+
   return (
     <Box sx={{ padding: 4, backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
       <Typography
