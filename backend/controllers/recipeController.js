@@ -42,7 +42,7 @@ exports.getAllRecipes = async (req, res) => {
     }
 
     const data = await fetchFromSpoonacular(
-      `${SPOONACULAR_API_BASE}/random?number=10`,
+      `${SPOONACULAR_API_BASE}/random?number=100`,
     );
     console.log(
       "Random recipe IDs:",
