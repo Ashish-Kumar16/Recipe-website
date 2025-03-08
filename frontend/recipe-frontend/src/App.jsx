@@ -23,25 +23,25 @@ const App = () => {
   useEffect(() => {
     const restoreAuth = async () => {
       const token = localStorage.getItem("token");
-      console.log("[App] Token found:", token ? "Yes" : "No");
+      // console.log("[App] Token found:", token ? "Yes" : "No");
       if (token) {
         const userData = parseJwt(token);
-        console.log("[App] Parsed JWT:", userData);
+        // console.log("[App] Parsed JWT:", userData);
         if (userData) {
           dispatch(setAuth({ token, user: userData }));
           try {
             const result = await dispatch(fetchUserProfile()).unwrap();
-            console.log("[App] Profile fetch succeeded:", result);
+            // console.log("[App] Profile fetch succeeded:", result);
           } catch (err) {
-            console.error("[App] Profile fetch failed:", err);
-            console.log("[App] Using JWT data as fallback:", userData);
+            // console.error("[App] Profile fetch failed:", err);
+            // console.log("[App] Using JWT data as fallback:", userData);
           }
         } else {
-          console.warn("[App] Invalid JWT data");
+          // console.warn("[App] Invalid JWT data");
           dispatch(logout());
         }
       } else {
-        console.log("[App] No token, skipping auth restoration");
+        // console.log("[App] No token, skipping auth restoration");
       }
       setIsRestoringAuth(false);
     };
@@ -50,25 +50,25 @@ const App = () => {
   }, [dispatch]);
 
   const handleSearch = (query, page) => {
-    console.log("[App] Search - Query:", query, "Page:", page);
+    // console.log("[App] Search - Query:", query, "Page:", page);
   };
 
   if (isRestoringAuth || authLoading) {
-    console.log(
-      "[App] Rendering skeleton - isRestoringAuth:",
-      isRestoringAuth,
-      "authLoading:",
-      authLoading,
-    );
+    // console.log(
+    //   "[App] Rendering skeleton - isRestoringAuth:",
+    //   isRestoringAuth,
+    //   "authLoading:",
+    //   authLoading,
+    // );
     return <NavbarSkeleton />;
   }
 
-  console.log(
-    "[App] Rendering app - isAuthenticated:",
-    isAuthenticated,
-    "error:",
-    error,
-  );
+  // console.log(
+  //   "[App] Rendering app - isAuthenticated:",
+  //   isAuthenticated,
+  //   "error:",
+  //   error,
+  // );
 
   return (
     <BrowserRouter>
