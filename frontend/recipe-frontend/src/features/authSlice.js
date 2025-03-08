@@ -47,7 +47,7 @@ export const fetchUserProfile = createAsyncThunk(
       if (!token) throw new Error("No token found");
       const config = { headers: { Authorization: `Bearer ${token}` } };
       const response = await axios.get(`${API_URL}/profile`, config);
-      console.log("fetchUserProfile response:", response.data);
+      // console.log("fetchUserProfile response:", response.data);
       return response.data;
     } catch (err) {
       localStorage.removeItem("token");
@@ -82,7 +82,7 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       state.token = action.payload.token;
       state.user = action.payload.user;
-      console.log("setAuth called:", action.payload);
+      // console.log("setAuth called:", action.payload);
     },
   },
   extraReducers: (builder) => {
@@ -129,7 +129,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload;
         state.isAuthenticated = true;
-        console.log("fetchUserProfile fulfilled:", action.payload);
+        // console.log("fetchUserProfile fulfilled:", action.payload);
       })
       .addCase(fetchUserProfile.rejected, (state, action) => {
         state.loading = false;

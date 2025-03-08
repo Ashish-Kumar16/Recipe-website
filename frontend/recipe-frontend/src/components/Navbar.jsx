@@ -37,12 +37,12 @@ const Navbar = ({ onSearch, totalPages = 1 }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  console.log(
-    "Navbar render - isAuthenticated:",
-    isAuthenticated,
-    "user:",
-    user,
-  );
+  // console.log(
+  //   "Navbar render - isAuthenticated:",
+  //   isAuthenticated,
+  //   "user:",
+  //   user,
+  // );
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
