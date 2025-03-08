@@ -116,6 +116,27 @@ const Navbar = ({ onSearch, totalPages = 1 }) => {
     }
   };
 
+  const LogoComponent = () => (
+    <Link to="/" style={{ textDecoration: "none", color: "inherit" }}>
+      <Box sx={{ textAlign: "left" }}>
+        <Typography
+          variant="h4"
+          fontFamily="cursive"
+          fontStyle="italic"
+          fontWeight="bold"
+        >
+          Recipe
+        </Typography>
+        <Typography
+          variant="body2"
+          sx={{ letterSpacing: 2, color: "#ff7043", fontWeight: "bold" }}
+        >
+          COOKING FOR THE SOUL
+        </Typography>
+      </Box>
+    </Link>
+  );
+
   return (
     <AppBar
       position="static"
@@ -150,22 +171,7 @@ const Navbar = ({ onSearch, totalPages = 1 }) => {
                 <MenuIcon />
               </IconButton>
             )}
-            <Box sx={{ textAlign: "left" }}>
-              <Typography
-                variant="h4"
-                fontFamily="cursive"
-                fontStyle="italic"
-                fontWeight="bold"
-              >
-                Recipe
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{ letterSpacing: 2, color: "#ff7043", fontWeight: "bold" }}
-              >
-                COOKING FOR THE SOUL
-              </Typography>
-            </Box>
+            <LogoComponent />
           </Box>
 
           {!isMobile && (

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { setAuth, fetchUserProfile } from "./features/authSlice";
+import { setAuth, fetchUserProfile, logout } from "./features/authSlice";
 import Home from "./pages/Home";
-import RecipeDetail from "./pages/ReceipeDetailPage";
+import RecipeDetail from "./pages/ReceipeDetailPage"; // Corrected to match file name
 import SearchResults from "./pages/SearchResults";
 import SavedRecipes from "./pages/SavedRecipePage";
 import OAuthCallback from "./components/OAuthCallback";
@@ -13,32 +13,35 @@ import { parseJwt } from "./utils/jwt";
 
 const App = () => {
   const dispatch = useDispatch();
-  const { isAuthenticated, loading: authLoading } = useSelector(
-    (state) => state.auth,
-  );
+  const {
+    isAuthenticated,
+    loading: authLoading,
+    error,
+  } = useSelector((state) => state.auth);
   const [isRestoringAuth, setIsRestoringAuth] = useState(true);
 
   useEffect(() => {
     const restoreAuth = async () => {
       const token = localStorage.getItem("token");
-      console.log(
-        "App useEffect - Token:",
-        token,
-        "isAuthenticated:",
-        isAuthenticated,
-      );
+      console.log("[App] Token found:", token ? "Yes" : "No");
       if (token) {
         const userData = parseJwt(token);
+        console.log("[App] Parsed JWT:", userData);
         if (userData) {
           dispatch(setAuth({ token, user: userData }));
           try {
-            await dispatch(fetchUserProfile()).unwrap();
-            console.log("Profile fetch succeeded");
+            const result = await dispatch(fetchUserProfile()).unwrap();
+            console.log("[App] Profile fetch succeeded:", result);
           } catch (err) {
-            console.error("Profile fetch failed:", err);
-            dispatch(logout()); // Logout if profile fetch fails
+            console.error("[App] Profile fetch failed:", err);
+            console.log("[App] Using JWT data as fallback:", userData);
           }
+        } else {
+          console.warn("[App] Invalid JWT data");
+          dispatch(logout());
         }
+      } else {
+        console.log("[App] No token, skipping auth restoration");
       }
       setIsRestoringAuth(false);
     };
@@ -47,13 +50,25 @@ const App = () => {
   }, [dispatch]);
 
   const handleSearch = (query, page) => {
-    console.log("App handleSearch - Query:", query, "Page:", page);
-    // Logic to update Home's search state can be added here if needed
+    console.log("[App] Search - Query:", query, "Page:", page);
   };
 
   if (isRestoringAuth || authLoading) {
+    console.log(
+      "[App] Rendering skeleton - isRestoringAuth:",
+      isRestoringAuth,
+      "authLoading:",
+      authLoading,
+    );
     return <NavbarSkeleton />;
   }
+
+  console.log(
+    "[App] Rendering app - isAuthenticated:",
+    isAuthenticated,
+    "error:",
+    error,
+  );
 
   return (
     <BrowserRouter>
