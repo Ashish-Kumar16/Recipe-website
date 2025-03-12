@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { setAuth, fetchUserProfile, logout } from "./features/authSlice";
 import Home from "./pages/Home";
@@ -11,13 +17,15 @@ import NavbarSkeleton from "./components/NavbarSkeleton";
 import Layout from "./components/Layout";
 import { parseJwt } from "./utils/jwt";
 
-const App = () => {
+const AppContent = ({ onSearch }) => {
   const dispatch = useDispatch();
   const { isAuthenticated, loading: authLoading } = useSelector(
     (state) => state.auth,
   );
   const [isRestoringAuth, setIsRestoringAuth] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const restoreAuth = async () => {
@@ -40,8 +48,21 @@ const App = () => {
     restoreAuth();
   }, [dispatch]);
 
+  useEffect(() => {
+    // Update searchQuery from location.state if present
+    if (location.state?.searchQuery) {
+      setSearchQuery(location.state.searchQuery);
+      // Clear the state after consuming it
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, navigate]);
+
   const handleSearch = (query) => {
     setSearchQuery(query);
+    // Redirect to homepage with query if not already there
+    if (location.pathname !== "/") {
+      navigate("/", { state: { searchQuery: query } });
+    }
   };
 
   if (isRestoringAuth || authLoading) {
@@ -49,19 +70,25 @@ const App = () => {
   }
 
   return (
+    <Routes>
+      <Route element={<Layout onSearch={handleSearch} />}>
+        <Route path="/" element={<Home searchQuery={searchQuery} />} />
+        <Route path="/recipe/:id" element={<RecipeDetail />} />
+        <Route
+          path="/search"
+          element={<SearchResults searchQuery={searchQuery} />}
+        />
+        <Route path="/saved-recipe" element={<SavedRecipes />} />
+        <Route path="/oauth/callback" element={<OAuthCallback />} />
+      </Route>
+    </Routes>
+  );
+};
+
+const App = () => {
+  return (
     <BrowserRouter>
-      <Routes>
-        <Route element={<Layout onSearch={handleSearch} />}>
-          <Route path="/" element={<Home searchQuery={searchQuery} />} />
-          <Route path="/recipe/:id" element={<RecipeDetail />} />
-          <Route
-            path="/search"
-            element={<SearchResults searchQuery={searchQuery} />}
-          />
-          <Route path="/saved-recipe" element={<SavedRecipes />} />
-          <Route path="/oauth/callback" element={<OAuthCallback />} />
-        </Route>
-      </Routes>
+      <AppContent />
     </BrowserRouter>
   );
 };

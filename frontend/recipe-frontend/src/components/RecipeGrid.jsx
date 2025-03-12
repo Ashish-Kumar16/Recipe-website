@@ -3,6 +3,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { fetchRecipes } from "../features/recipesSlice";
 import {
+  fetchSavedRecipes,
+  saveRecipe,
+  deleteRecipe,
+} from "../features/savedRecipesSlice";
+import {
   Grid,
   Card,
   CardMedia,
@@ -11,17 +16,16 @@ import {
   Box,
   Skeleton,
   IconButton,
-  ToggleButton,
-  ToggleButtonGroup,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
   Button,
 } from "@mui/material";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import ThumbUpIcon from "@mui/icons-material/ThumbUp";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { toast } from "react-toastify";
-import axios from "axios";
 
 const RecipeGrid = ({ searchQuery }) => {
   const dispatch = useDispatch();
@@ -32,34 +36,26 @@ const RecipeGrid = ({ searchQuery }) => {
     status,
     error,
   } = useSelector((state) => state.recipes);
+  const { data: savedRecipesData, status: savedStatus } = useSelector(
+    (state) => state.savedRecipes,
+  );
   const { isAuthenticated = false } = useSelector((state) => state.auth || {});
   const [currentPage, setCurrentPage] = useState(1);
-  const [savedRecipes, setSavedRecipes] = useState([]);
   const [dietFilter, setDietFilter] = useState("all");
-  const [timeSort, setTimeSort] = useState("asc");
+  const [timeSort, setTimeSort] = useState("none");
+  const [ratingSort, setRatingSort] = useState("none");
   const itemsPerPage = 9;
+
+  // Derive savedRecipes from Redux state
+  const savedRecipes = savedRecipesData.map((recipe) => recipe.recipeId);
 
   useEffect(() => {
     dispatch(fetchRecipes());
     if (isAuthenticated) {
-      fetchSavedRecipes();
+      dispatch(fetchSavedRecipes());
     }
     setCurrentPage(1);
   }, [dispatch, isAuthenticated, searchQuery, location.pathname]);
-
-  const fetchSavedRecipes = async () => {
-    try {
-      const response = await axios.get(
-        "https://recipe-website-arnr.onrender.com/api/recipes/saved",
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        },
-      );
-      setSavedRecipes(response.data.map((recipe) => recipe.recipeId));
-    } catch (err) {
-      console.error("Failed to fetch saved recipes:", err);
-    }
-  };
 
   const filteredRecipes = recipes
     .filter(
@@ -73,10 +69,21 @@ const RecipeGrid = ({ searchQuery }) => {
       return true;
     })
     .sort((a, b) => {
+      // Sort by rating (aggregateLikes)
+      if (ratingSort === "desc") {
+        return (b.aggregateLikes || 0) - (a.aggregateLikes || 0);
+      } else if (ratingSort === "asc") {
+        return (a.aggregateLikes || 0) - (b.aggregateLikes || 0);
+      }
+
+      // Sort by time (readyInMinutes)
       if (timeSort === "asc") {
         return a.readyInMinutes - b.readyInMinutes;
+      } else if (timeSort === "desc") {
+        return b.readyInMinutes - a.readyInMinutes;
       }
-      return b.readyInMinutes - a.readyInMinutes;
+
+      return 0; // Default: no sorting
     });
 
   const totalPages = Math.ceil(filteredRecipes.length / itemsPerPage);
@@ -101,47 +108,24 @@ const RecipeGrid = ({ searchQuery }) => {
         readyInMinutes: recipe.readyInMinutes,
       };
 
-      const response = await axios.post(
-        "https://recipe-website-arnr.onrender.com/api/recipes/save",
-        recipeData,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        },
-      );
-
-      setSavedRecipes((prev) => [...prev, recipe.id]);
-      toast.success(response.data.message);
+      const result = await dispatch(saveRecipe(recipeData)).unwrap();
+      toast.success(result.message || "Recipe saved!");
     } catch (err) {
       console.error("Error saving recipe:", err);
-      toast.error(err.response?.data?.error || "Failed to save recipe");
+      toast.error(err || "Failed to save recipe");
     }
   };
 
   const handleDeleteRecipe = async (recipeId) => {
     try {
-      const savedRecipeResponse = await axios.get(
-        "https://recipe-website-arnr.onrender.com/api/recipes/saved",
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        },
-      );
-      const savedRecipe = savedRecipeResponse.data.find(
-        (r) => r.recipeId === recipeId,
-      );
+      const savedRecipe = savedRecipesData.find((r) => r.recipeId === recipeId);
       if (!savedRecipe) throw new Error("Saved recipe not found");
 
-      await axios.delete(
-        `https://recipe-website-arnr.onrender.com/api/recipes/saved/${savedRecipe._id}`,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        },
-      );
-
-      setSavedRecipes((prev) => prev.filter((id) => id !== recipeId));
+      await dispatch(deleteRecipe(savedRecipe._id)).unwrap();
       toast.success("Recipe removed from saved!");
     } catch (err) {
       console.error("Error deleting recipe:", err);
-      toast.error(err.response?.data?.error || "Failed to delete recipe");
+      toast.error(err || "Failed to delete recipe");
     }
   };
 
@@ -157,15 +141,20 @@ const RecipeGrid = ({ searchQuery }) => {
     }
   };
 
-  const handleDietFilter = (event, newDiet) => {
-    if (newDiet !== null) {
-      setDietFilter(newDiet);
-      setCurrentPage(1);
-    }
+  const handleDietFilterChange = (event) => {
+    setDietFilter(event.target.value);
+    setCurrentPage(1);
   };
 
-  const handleTimeSort = () => {
-    setTimeSort((prev) => (prev === "asc" ? "desc" : "asc"));
+  const handleTimeSortChange = (event) => {
+    setTimeSort(event.target.value);
+    setRatingSort("none"); // Reset rating sort
+    setCurrentPage(1);
+  };
+
+  const handleRatingSortChange = (event) => {
+    setRatingSort(event.target.value);
+    setTimeSort("none"); // Reset time sort
     setCurrentPage(1);
   };
 
@@ -203,60 +192,47 @@ const RecipeGrid = ({ searchQuery }) => {
           gap: 2,
         }}
       >
-        <ToggleButtonGroup
-          value={dietFilter}
-          exclusive
-          onChange={handleDietFilter}
-          aria-label="diet filter"
-          sx={{ flexWrap: "wrap", justifyContent: "center" }}
-        >
-          <ToggleButton
-            value="all"
-            sx={{
-              px: 3,
-              py: 1,
-              fontSize: { xs: "0.8rem", sm: "0.9rem" },
-            }}
+        <FormControl sx={{ minWidth: 150 }}>
+          <InputLabel id="diet-filter-label">Diet</InputLabel>
+          <Select
+            labelId="diet-filter-label"
+            value={dietFilter}
+            label="Diet"
+            onChange={handleDietFilterChange}
           >
-            All
-          </ToggleButton>
-          <ToggleButton
-            value="vegetarian"
-            sx={{
-              px: 3,
-              py: 1,
-              fontSize: { xs: "0.8rem", sm: "0.9rem" },
-            }}
-          >
-            Vegetarian
-          </ToggleButton>
-          <ToggleButton
-            value="non-vegetarian"
-            sx={{
-              px: 3,
-              py: 1,
-              fontSize: { xs: "0.8rem", sm: "0.9rem" },
-            }}
-          >
-            Non-Vegetarian
-          </ToggleButton>
-        </ToggleButtonGroup>
+            <MenuItem value="all">All</MenuItem>
+            <MenuItem value="vegetarian">Vegetarian</MenuItem>
+            <MenuItem value="non-vegetarian">Non-Vegetarian</MenuItem>
+          </Select>
+        </FormControl>
 
-        <Button
-          variant="outlined"
-          onClick={handleTimeSort}
-          startIcon={
-            timeSort === "asc" ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />
-          }
-          sx={{
-            textTransform: "none",
-            fontSize: { xs: "0.8rem", sm: "0.9rem" },
-            px: 3,
-            py: 1,
-          }}
-        >
-          Sort by Time
-        </Button>
+        <FormControl sx={{ minWidth: 150 }}>
+          <InputLabel id="time-sort-label">Sort by Time</InputLabel>
+          <Select
+            labelId="time-sort-label"
+            value={timeSort}
+            label="Sort by Time"
+            onChange={handleTimeSortChange}
+          >
+            <MenuItem value="none">None</MenuItem>
+            <MenuItem value="asc">Fastest First</MenuItem>
+            <MenuItem value="desc">Slowest First</MenuItem>
+          </Select>
+        </FormControl>
+
+        <FormControl sx={{ minWidth: 150 }}>
+          <InputLabel id="rating-sort-label">Sort by Rating</InputLabel>
+          <Select
+            labelId="rating-sort-label"
+            value={ratingSort}
+            label="Sort by Rating"
+            onChange={handleRatingSortChange}
+          >
+            <MenuItem value="none">None</MenuItem>
+            <MenuItem value="desc">Highest First</MenuItem>
+            <MenuItem value="asc">Lowest First</MenuItem>
+          </Select>
+        </FormControl>
       </Box>
 
       <Grid container spacing={{ xs: 2, sm: 3 }} justifyContent="center">
@@ -296,7 +272,6 @@ const RecipeGrid = ({ searchQuery }) => {
                   flexDirection: "column",
                   justifyContent: "space-between",
                   cursor: "pointer",
-                  position: "relative",
                 }}
                 onClick={() => handleCardClick(recipe.id)}
               >
@@ -312,22 +287,6 @@ const RecipeGrid = ({ searchQuery }) => {
                     flexShrink: 0,
                   }}
                 />
-                <IconButton
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleBookmarkClick(recipe.id);
-                  }}
-                  sx={{
-                    position: "absolute",
-                    top: 8,
-                    right: 8,
-                    color: savedRecipes.includes(recipe.id)
-                      ? "#d32f2f"
-                      : "grey",
-                  }}
-                >
-                  <BookmarkIcon />
-                </IconButton>
                 <CardContent
                   sx={{
                     padding: { xs: 1.5, sm: 2 },
@@ -337,18 +296,38 @@ const RecipeGrid = ({ searchQuery }) => {
                     justifyContent: "space-between",
                   }}
                 >
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      textTransform: "uppercase",
-                      fontWeight: "bold",
-                      letterSpacing: 1,
-                      color: recipe.vegan ? "#4caf50" : "#d32f2f",
-                      fontSize: { xs: "0.7rem", sm: "0.75rem" },
-                    }}
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
                   >
-                    {recipe.vegan ? "Vegetarian" : "Non-Vegetarian"}
-                  </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        textTransform: "uppercase",
+                        fontWeight: "bold",
+                        letterSpacing: 1,
+                        color: recipe.vegan ? "#4caf50" : "#d32f2f",
+                        fontSize: { xs: "0.7rem", sm: "0.75rem" },
+                      }}
+                    >
+                      {recipe.vegan ? "Vegetarian" : "Non-Vegetarian"}
+                    </Typography>
+                    <IconButton
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleBookmarkClick(recipe.id);
+                      }}
+                      sx={{
+                        color: savedRecipes.includes(recipe.id)
+                          ? "#d32f2f"
+                          : "grey",
+                        padding: { xs: "4px", sm: "6px" },
+                      }}
+                    >
+                      <BookmarkIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
                   <Typography
                     variant="h6"
                     fontWeight="bold"
@@ -393,7 +372,7 @@ const RecipeGrid = ({ searchQuery }) => {
                           fontSize: { xs: "0.8rem", sm: "0.875rem" },
                         }}
                       >
-                        MEDIUM
+                        {recipe.aggregateLikes || 0} LIKES
                       </Typography>
                     </Box>
                   </Box>
@@ -426,7 +405,7 @@ const RecipeGrid = ({ searchQuery }) => {
               ? error
               : error?.error || "An error occurred"}
           </Typography>
-          <button
+          <Button
             style={{
               padding: "8px 16px",
               marginTop: "10px",
@@ -440,7 +419,7 @@ const RecipeGrid = ({ searchQuery }) => {
             onClick={() => dispatch(fetchRecipes())}
           >
             Retry
-          </button>
+          </Button>
         </Box>
       )}
 
@@ -452,7 +431,7 @@ const RecipeGrid = ({ searchQuery }) => {
           mt={4}
           gap={2}
         >
-          <button
+          <Button
             style={{
               padding: "10px 20px",
               border: "none",
@@ -468,14 +447,14 @@ const RecipeGrid = ({ searchQuery }) => {
             disabled={currentPage === 1}
           >
             Previous
-          </button>
+          </Button>
           <Typography
             variant="h6"
             sx={{ fontSize: { xs: "1rem", sm: "1.25rem" } }}
           >
             {currentPage} / {totalPages}
           </Typography>
-          <button
+          <Button
             style={{
               padding: "10px 20px",
               border: "none",
@@ -493,7 +472,7 @@ const RecipeGrid = ({ searchQuery }) => {
             disabled={currentPage === totalPages}
           >
             Next
-          </button>
+          </Button>
         </Box>
       )}
     </Box>

@@ -21,20 +21,21 @@ export const fetchSavedRecipes = createAsyncThunk(
   },
 );
 
-export const updateRecipeOrder = createAsyncThunk(
-  "savedRecipes/updateRecipeOrder",
-  async (reorderedRecipes, { rejectWithValue }) => {
+export const saveRecipe = createAsyncThunk(
+  "savedRecipes/saveRecipe",
+  async (recipeData, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No authentication token found");
 
-      const recipeIds = reorderedRecipes.map((recipe) => recipe._id);
-      const response = await axios.put(
-        "https://recipe-website-arnr.onrender.com/api/recipes/saved/order",
-        { recipeIds },
-        { headers: { Authorization: `Bearer ${token}` } },
+      const response = await axios.post(
+        "https://recipe-website-arnr.onrender.com/api/recipes/save",
+        recipeData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
       );
-      return response.data; // Updated savedRecipes array
+      return response.data.recipe; // Ensure backend returns the saved recipe object
     } catch (error) {
       return rejectWithValue(error.response?.data?.error || error.message);
     }
@@ -54,7 +55,27 @@ export const deleteRecipe = createAsyncThunk(
           headers: { Authorization: `Bearer ${token}` },
         },
       );
-      return recipeId; // Return the deleted recipe's ID for state update
+      return recipeId;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || error.message);
+    }
+  },
+);
+
+export const updateRecipeOrder = createAsyncThunk(
+  "savedRecipes/updateRecipeOrder",
+  async (reorderedRecipes, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No authentication token found");
+
+      const recipeIds = reorderedRecipes.map((recipe) => recipe._id);
+      const response = await axios.put(
+        "https://recipe-website-arnr.onrender.com/api/recipes/saved/order",
+        { recipeIds },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.error || error.message);
     }
@@ -70,7 +91,7 @@ const savedRecipesSlice = createSlice({
   },
   reducers: {
     reorderRecipes(state, action) {
-      state.data = action.payload; // Local reorder before persisting
+      state.data = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -88,26 +109,36 @@ const savedRecipesSlice = createSlice({
         state.status = "failed";
         state.error = action.payload;
       })
-      // Update Recipe Order
-      .addCase(updateRecipeOrder.pending, (state) => {
-        state.error = null; // Clear previous errors
+      // Save Recipe
+      .addCase(saveRecipe.pending, (state) => {
+        state.error = null;
       })
-      .addCase(updateRecipeOrder.fulfilled, (state, action) => {
-        state.data = action.payload; // Sync with backend
+      .addCase(saveRecipe.fulfilled, (state, action) => {
+        state.data.push(action.payload); // Add the newly saved recipe
       })
-      .addCase(updateRecipeOrder.rejected, (state, action) => {
+      .addCase(saveRecipe.rejected, (state, action) => {
         state.error = action.payload;
       })
       // Delete Recipe
       .addCase(deleteRecipe.pending, (state) => {
-        state.error = null; // Clear previous errors
+        state.error = null;
       })
       .addCase(deleteRecipe.fulfilled, (state, action) => {
         state.data = state.data.filter(
           (recipe) => recipe._id !== action.payload,
-        ); // Remove the deleted recipe from state
+        );
       })
       .addCase(deleteRecipe.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+      // Update Recipe Order
+      .addCase(updateRecipeOrder.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(updateRecipeOrder.fulfilled, (state, action) => {
+        state.data = action.payload;
+      })
+      .addCase(updateRecipeOrder.rejected, (state, action) => {
         state.error = action.payload;
       });
   },

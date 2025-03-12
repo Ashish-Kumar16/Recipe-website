@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   AppBar,
   Box,
@@ -20,6 +20,7 @@ import {
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../features/authSlice";
+import { fetchSavedRecipes } from "../features/savedRecipesSlice";
 import AuthCard from "./AuthCard";
 
 const Navbar = ({ onSearch }) => {
@@ -37,14 +38,28 @@ const Navbar = ({ onSearch }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(fetchSavedRecipes());
+    }
+  }, [isAuthenticated, dispatch]);
+
   const handleSearch = (e) => {
     e.preventDefault();
-    onSearch(searchQuery); // Pass query to parent (App)
+    if (searchQuery.trim()) {
+      // Redirect to homepage with search query
+      navigate("/", { state: { searchQuery: searchQuery.trim() } });
+      onSearch(searchQuery.trim()); // Pass query to parent component
+    }
   };
 
   const handleClear = () => {
     setSearchQuery("");
-    onSearch(""); // Clear search in parent
+    onSearch(""); // Clear search results in parent component
+    // Optionally redirect to homepage without query
+    if (location.pathname !== "/") {
+      navigate("/");
+    }
   };
 
   const handleProfileClick = (event) => {
@@ -219,11 +234,9 @@ const Navbar = ({ onSearch }) => {
         <Box
           sx={{
             display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
+            justifyContent: "center",
             paddingTop: 1,
             borderTop: "1px solid lightgray",
-            gap: 1,
           }}
         >
           <Box
@@ -232,37 +245,54 @@ const Navbar = ({ onSearch }) => {
             sx={{
               display: "flex",
               alignItems: "center",
+              width: { xs: "80%", sm: "400px" },
+              maxWidth: "500px",
+              bgcolor: "white",
+              borderRadius: "25px",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+              padding: "4px 10px",
               position: "relative",
-              width: isMobile ? "200px" : "300px",
+              transition: "box-shadow 0.3s ease",
+              "&:hover": {
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+              },
             }}
           >
-            <InputBase
-              placeholder="Search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              sx={{
-                fontSize: "1rem",
-                width: "100%",
-                borderBottom: "2px solid black",
-                paddingBottom: "4px",
-              }}
-            />
             <IconButton
               type="submit"
               sx={{
-                backgroundColor: "#ff7043",
-                color: "white",
-                position: "absolute",
-                right: "-40px",
-                "&:hover": { backgroundColor: "#f4511e" },
+                p: "6px",
+                color: "#ff7043",
+                "&:hover": { color: "#f4511e" },
               }}
             >
               <SearchIcon />
             </IconButton>
+            <InputBase
+              placeholder="Search recipes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              sx={{
+                flex: 1,
+                fontSize: "1rem",
+                color: "#2c3e50",
+                "& .MuiInputBase-input": {
+                  padding: "8px 0",
+                },
+                "&::placeholder": {
+                  color: "#7f8c8d",
+                  opacity: 1,
+                },
+              }}
+            />
             {searchQuery && (
               <IconButton
                 onClick={handleClear}
-                sx={{ position: "absolute", right: "-80px" }}
+                sx={{
+                  p: "6px",
+                  color: "#7f8c8d",
+                  "&:hover": { color: "#d32f2f" },
+                }}
               >
                 <ClearIcon />
               </IconButton>
@@ -282,10 +312,10 @@ const Navbar = ({ onSearch }) => {
             <MenuItem onClick={() => handleMenuItemClick("/saved-recipe")}>
               Saved Recipes ({savedRecipes.length})
             </MenuItem>
-            <MenuItem onClick={() => handleMenuItemClick("/about-us")}>
+            <MenuItem onClick={() => handleMenuItemClick("/")}>
               About us
             </MenuItem>
-            <MenuItem onClick={() => handleMenuItemClick("/contact-us")}>
+            <MenuItem onClick={() => handleMenuItemClick("/")}>
               Contact us
             </MenuItem>
             {isAuthenticated ? (

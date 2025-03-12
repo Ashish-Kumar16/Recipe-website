@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams, useLocation } from "react-router-dom"; // Add useLocation
+import { useParams, useLocation } from "react-router-dom";
 import { fetchRecipeById } from "../features/recipesSlice";
+import {
+  saveRecipe,
+  deleteRecipe,
+  fetchSavedRecipes,
+} from "../features/savedRecipesSlice"; // Import save/delete thunks
 import {
   Box,
   Typography,
@@ -20,21 +25,33 @@ import StarIcon from "@mui/icons-material/Star";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import PeopleIcon from "@mui/icons-material/People";
 import RestaurantIcon from "@mui/icons-material/Restaurant";
+import BookmarkIcon from "@mui/icons-material/Bookmark"; // Import BookmarkIcon for Save button
+import { toast } from "react-toastify";
 
 const RecipeDetail = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
-  const location = useLocation(); // Track route changes
+  const location = useLocation();
   const { recipeDetail, detailStatus, detailError } = useSelector(
     (state) => state.recipes,
-  ); // Use recipeDetail instead of recipe
+  );
+  const { data: savedRecipesData, status: savedStatus } = useSelector(
+    (state) => state.savedRecipes,
+  ); // Get saved recipes from Redux
+  const { isAuthenticated = false } = useSelector((state) => state.auth || {});
   const [servings, setServings] = useState(null);
   const [checkedIngredients, setCheckedIngredients] = useState({});
 
+  // Derive savedRecipes as an array of recipeIds
+  const savedRecipes = savedRecipesData.map((recipe) => recipe.recipeId);
+  const isRecipeSaved = savedRecipes.includes(Number(id)); // Check if current recipe is saved
+
   useEffect(() => {
-    // Fetch recipe whenever id or pathname changes
     dispatch(fetchRecipeById(id));
-  }, [dispatch, id, location.pathname]); // Depend on id and pathname
+    if (isAuthenticated) {
+      dispatch(fetchSavedRecipes()); // Fetch saved recipes on load if authenticated
+    }
+  }, [dispatch, id, location.pathname, isAuthenticated]);
 
   useEffect(() => {
     if (recipeDetail) {
@@ -74,6 +91,46 @@ const RecipeDetail = () => {
       ...prev,
       [ingredientId]: !prev[ingredientId],
     }));
+  };
+
+  const handleSaveToggle = async () => {
+    if (!isAuthenticated) {
+      toast.error("Please sign in to save recipes!");
+      return;
+    }
+
+    if (isRecipeSaved) {
+      // Unsave the recipe
+      try {
+        const savedRecipe = savedRecipesData.find(
+          (r) => r.recipeId === Number(id),
+        );
+        if (!savedRecipe) throw new Error("Saved recipe not found");
+
+        await dispatch(deleteRecipe(savedRecipe._id)).unwrap();
+        toast.success("Recipe removed from saved!");
+      } catch (err) {
+        console.error("Error deleting recipe:", err);
+        toast.error(err || "Failed to delete recipe");
+      }
+    } else {
+      // Save the recipe
+      try {
+        const recipeData = {
+          recipeId: recipeDetail.id,
+          title: recipeDetail.title,
+          image: recipeDetail.image,
+          vegan: recipeDetail.vegan,
+          readyInMinutes: recipeDetail.readyInMinutes,
+        };
+
+        const result = await dispatch(saveRecipe(recipeData)).unwrap();
+        toast.success(result.message || "Recipe saved!");
+      } catch (err) {
+        console.error("Error saving recipe:", err);
+        toast.error(err || "Failed to save recipe");
+      }
+    }
   };
 
   const renderSkeleton = () => (
@@ -506,6 +563,20 @@ const RecipeDetail = () => {
           onClick={handlePrint}
         >
           Print
+        </Button>
+        <Button
+          variant="contained"
+          sx={{
+            backgroundColor: isRecipeSaved ? "#d32f2f" : "#ff6f61",
+            textTransform: "uppercase",
+            "&:hover": {
+              backgroundColor: isRecipeSaved ? "#b71c1c" : "#f4511e",
+            },
+          }}
+          onClick={handleSaveToggle}
+          startIcon={<BookmarkIcon />}
+        >
+          {isRecipeSaved ? "Saved" : "Save"}
         </Button>
       </Box>
     </Box>
