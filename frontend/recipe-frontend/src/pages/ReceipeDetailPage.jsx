@@ -1,21 +1,17 @@
 import React from "react";
-import Navbar from "../components/Navbar";
-import RecipeDetail from "../components/RecipeDetail";
-import Footer from "../components/Footer";
+import RecipeDetail from "../components/RecipeDetail/MainRecipeDetail";
 import { Box, Container } from "@mui/material";
 
-const ReceipeDetail = () => {
+const RecipeDetailPage = () => {
   return (
-    <>
-      {/* <Navbar /> */}
-      <Box sx={{ display: "flex", justifyContent: "center" }}>
-        <Container sx={{ width: "75%" }}>
+    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+      <Box sx={{ flex: 1, display: "flex", justifyContent: "center" }}>
+        <Container sx={{ width: "85%", py: 2 }}>
           <RecipeDetail />
         </Container>
       </Box>
-      <Footer />
-    </>
+    </Box>
   );
 };
 
-export default ReceipeDetail;
+export default RecipeDetailPage;

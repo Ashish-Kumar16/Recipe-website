@@ -16,6 +16,10 @@ import OAuthCallback from "./components/OAuthCallback";
 import NavbarSkeleton from "./components/NavbarSkeleton";
 import Layout from "./components/Layout";
 import { parseJwt } from "./utils/jwt";
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
 
 const AppContent = ({ onSearch }) => {
   const dispatch = useDispatch();
@@ -79,6 +83,8 @@ const AppContent = ({ onSearch }) => {
           element={<SearchResults searchQuery={searchQuery} />}
         />
         <Route path="/saved-recipe" element={<SavedRecipes />} />
+        <Route path="/about-us" element={<About />} />
+        <Route path="/contact-us" element={<Contact />} />
         <Route path="/oauth/callback" element={<OAuthCallback />} />
       </Route>
     </Routes>
@@ -89,6 +95,7 @@ const App = () => {
   return (
     <BrowserRouter>
       <AppContent />
+      <Footer />
     </BrowserRouter>
   );
 };

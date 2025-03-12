@@ -1,5 +1,5 @@
 import React from "react";
-import RecipeGrid from "../components/RecipeGrid";
+import RecipeGrid from "../components//RecipeGrid/MainRecipeGrid";
 import { Typography, Box } from "@mui/material";
 
 const SearchResults = ({ searchQuery }) => {

@@ -1,7 +1,5 @@
 import React from "react";
-import Navbar from "../components/Navbar";
 import SavedRecipes from "../components/SavedRecipe";
-import Footer from "../components/Footer";
 import { Box, Container } from "@mui/material";
 
 const SavedRecipesPage = () => {
@@ -15,9 +13,6 @@ const SavedRecipesPage = () => {
         minHeight: "100vh",
       }}
     >
-      {/* Navbar */}
-      {/* <Navbar /> */}
-
       {/* Saved Recipes Content */}
       <Container
         sx={{
@@ -32,9 +27,6 @@ const SavedRecipesPage = () => {
       >
         <SavedRecipes />
       </Container>
-
-      {/* Footer */}
-      <Footer />
     </Box>
   );
 };

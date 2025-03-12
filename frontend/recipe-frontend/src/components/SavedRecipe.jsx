@@ -5,7 +5,7 @@ import {
   fetchSavedRecipes,
   reorderRecipes,
   updateRecipeOrder,
-  deleteRecipe, // New action
+  deleteRecipe,
 } from "../features/savedRecipesSlice";
 import {
   Box,
@@ -22,7 +22,7 @@ import {
   useTheme,
 } from "@mui/material";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import CloseIcon from "@mui/icons-material/Close"; // Import CloseIcon for delete
+import CloseIcon from "@mui/icons-material/Close";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { toast } from "react-toastify";
 
@@ -38,21 +38,16 @@ const SavedRecipes = () => {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
   useEffect(() => {
     if (isAuthenticated && (status === "idle" || status === "failed")) {
       dispatch(fetchSavedRecipes())
         .unwrap()
-        .catch((err) => {
-          toast.error(`Failed to load saved recipes: ${err}`);
-        });
+        .catch((err) => toast.error(`Failed to load saved recipes: ${err}`));
     }
   }, [isAuthenticated, status, dispatch]);
 
-  const handleCardClick = (recipeId) => {
-    navigate(`/recipe/${recipeId}`);
-  };
+  const handleCardClick = (recipeId) => navigate(`/recipe/${recipeId}`);
 
   const handleDeleteRecipe = (recipeId) => {
     dispatch(deleteRecipe(recipeId))
@@ -63,10 +58,8 @@ const SavedRecipes = () => {
 
   const handleDragEnd = (result) => {
     if (!result.destination) return;
-
     const sourceIndex = result.source.index;
     const destIndex = result.destination.index;
-
     const reorderedRecipes = Array.from(savedRecipes);
     const [movedRecipe] = reorderedRecipes.splice(sourceIndex, 1);
     reorderedRecipes.splice(destIndex, 0, movedRecipe);
@@ -86,26 +79,21 @@ const SavedRecipes = () => {
       return [...Array(5)].map((_, index) => (
         <ListItem
           key={index}
-          sx={{ py: 1, flexDirection: isMobile ? "column" : "row" }}
+          sx={{
+            py: 1,
+            px: 1.5,
+            backgroundColor: "#fff",
+            mb: 1,
+            borderRadius: 2,
+          }}
         >
-          <Skeleton
-            variant="text"
-            width={isMobile ? "20%" : 30}
-            sx={{ mr: isMobile ? 0 : 2, mb: isMobile ? 1 : 0 }}
-          />
+          <Skeleton variant="text" width={25} sx={{ mr: 1.5 }} />
           <ListItemAvatar>
-            <Skeleton
-              variant="rectangular"
-              width={isMobile ? "100%" : 80}
-              height={60}
-            />
+            <Skeleton variant="rectangular" width={50} height={50} />
           </ListItemAvatar>
           <ListItemText
-            primary={<Skeleton variant="text" width={isMobile ? "80%" : 200} />}
-            secondary={
-              <Skeleton variant="text" width={isMobile ? "60%" : 100} />
-            }
-            sx={{ textAlign: isMobile ? "center" : "left" }}
+            primary={<Skeleton variant="text" width={150} />}
+            secondary={<Skeleton variant="text" width={80} />}
           />
         </ListItem>
       ));
@@ -115,7 +103,7 @@ const SavedRecipes = () => {
       return (
         <Typography
           textAlign="center"
-          sx={{ mt: 4, fontSize: { xs: "1rem", md: "1.25rem" } }}
+          sx={{ mt: 4, fontSize: { xs: "1rem", md: "1.25rem" }, color: "#666" }}
         >
           No saved recipes yet. Start saving some delicious dishes!
         </Typography>
@@ -134,28 +122,31 @@ const SavedRecipes = () => {
             {...provided.draggableProps}
             {...provided.dragHandleProps}
             sx={{
-              py: 1,
+              py: isMobile ? 1 : 1.5,
+              px: isMobile ? 1.5 : 2,
               borderRadius: 2,
               backgroundColor: "#fff",
-              mb: 1,
-              boxShadow: 1,
-              "&:hover": { boxShadow: 3, backgroundColor: "#f1f3f5" },
+              mb: 1.5,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+              transition: "all 0.2s ease",
+              "&:hover": {
+                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                transform: "translateY(-2px)",
+              },
               cursor: "pointer",
               display: "flex",
-              flexDirection: isMobile ? "column" : "row",
-              alignItems: isMobile ? "center" : "center",
-              position: "relative", // For positioning the delete icon
+              alignItems: "center",
+              gap: isMobile ? 1 : 2,
             }}
           >
             <Typography
               variant="body1"
               sx={{
-                width: isMobile ? "auto" : 30,
+                minWidth: isMobile ? 25 : 30,
                 textAlign: "center",
                 fontWeight: "bold",
-                color: "#2c3e50",
-                mr: isMobile ? 0 : 2,
-                mb: isMobile ? 1 : 0,
+                color: "#34495e",
+                fontSize: isMobile ? "0.9rem" : "1rem",
               }}
             >
               {index + 1}.
@@ -166,10 +157,9 @@ const SavedRecipes = () => {
                 src={recipe.image}
                 alt={recipe.title}
                 sx={{
-                  width: isMobile ? "100%" : isTablet ? 60 : 80,
-                  height: isMobile ? 120 : 60,
-                  mr: isMobile ? 0 : 2,
-                  mb: isMobile ? 1 : 0,
+                  width: isMobile ? 50 : 80,
+                  height: isMobile ? 50 : 60,
+                  borderRadius: 1,
                 }}
               />
             </ListItemAvatar>
@@ -179,9 +169,10 @@ const SavedRecipes = () => {
                 <Typography
                   variant="h6"
                   sx={{
-                    color: "#2c3e50",
-                    fontSize: { xs: "1rem", md: "1.25rem" },
-                    textAlign: isMobile ? "center" : "left",
+                    color: "#34495e",
+                    fontSize: isMobile ? "0.9rem" : "1.25rem",
+                    fontWeight: 500,
+                    lineHeight: 1.2,
                   }}
                 >
                   {recipe.title}
@@ -189,38 +180,34 @@ const SavedRecipes = () => {
               }
               secondary={
                 <Box
-                  component="span"
                   display="flex"
-                  flexDirection={isMobile ? "column" : "row"}
                   alignItems="center"
-                  gap={1}
-                  sx={{ justifyContent: isMobile ? "center" : "flex-start" }}
+                  gap={isMobile ? 0.75 : 1.5}
+                  mt={isMobile ? 0.25 : 0.5}
                 >
                   <Chip
-                    label={recipe.vegan ? "Vegetarian" : "Non-Vegetarian"}
+                    label={recipe.vegan ? "Veg" : "Non-Veg"}
                     size="small"
                     sx={{
-                      backgroundColor: recipe.vegan ? "#4caf50" : "#d32f2f",
+                      backgroundColor: recipe.vegan ? "#27ae60" : "#c0392b",
                       color: "#fff",
-                      mb: isMobile ? 1 : 0,
+                      fontSize: isMobile ? "0.65rem" : "0.75rem",
+                      height: isMobile ? 20 : 24,
                     }}
                   />
-                  <Box
-                    component="span"
-                    display="flex"
-                    alignItems="center"
-                    gap={0.5}
-                  >
+                  <Box display="flex" alignItems="center" gap={0.5}>
                     <AccessTimeIcon
                       fontSize="small"
-                      sx={{ color: "#7f8c8d" }}
+                      sx={{
+                        color: "#7f8c8d",
+                        fontSize: isMobile ? "1rem" : "1.25rem",
+                      }}
                     />
                     <Typography
-                      component="span"
                       variant="body2"
                       sx={{
                         color: "#7f8c8d",
-                        fontSize: { xs: "0.8rem", md: "0.875rem" },
+                        fontSize: isMobile ? "0.75rem" : "0.875rem",
                       }}
                     >
                       {recipe.readyInMinutes} min
@@ -231,19 +218,17 @@ const SavedRecipes = () => {
             />
             <IconButton
               onClick={(e) => {
-                e.stopPropagation(); // Prevent card click from triggering
+                e.stopPropagation();
                 handleDeleteRecipe(recipe._id);
               }}
               sx={{
-                position: isMobile ? "absolute" : "relative",
-                top: isMobile ? 8 : "auto",
-                right: isMobile ? 8 : "auto",
-                color: "#d32f2f",
-                "&:hover": { color: "#b71c1c" },
-                ml: isMobile ? 0 : 1,
+                color: "#e74c3c",
+                "&:hover": { color: "#c0392b" },
+                ml: isMobile ? 0.5 : "auto",
+                p: isMobile ? 0.5 : 1,
               }}
             >
-              <CloseIcon />
+              <CloseIcon fontSize={isMobile ? "small" : "medium"} />
             </IconButton>
           </ListItem>
         )}
@@ -255,7 +240,7 @@ const SavedRecipes = () => {
     <Box
       sx={{
         padding: { xs: 2, sm: 3, md: 4 },
-        backgroundColor: "#f8f9fa",
+        backgroundColor: "#ecf0f1",
         minHeight: "100vh",
       }}
     >
@@ -263,10 +248,10 @@ const SavedRecipes = () => {
         variant="h4"
         gutterBottom
         sx={{
-          fontWeight: "bold",
+          fontWeight: 600,
           textAlign: "center",
-          color: "#2c3e50",
-          mb: { xs: 2, md: 3 },
+          color: "#34495e",
+          mb: { xs: 3, md: 4 },
           fontSize: { xs: "1.5rem", sm: "2rem", md: "2.5rem" },
         }}
       >
@@ -287,9 +272,9 @@ const SavedRecipes = () => {
             {(provided) => (
               <List
                 sx={{
-                  maxWidth: { xs: "100%", sm: 600, md: 600 },
+                  maxWidth: { xs: "100%", sm: 700, md: 800 },
                   mx: "auto",
-                  px: { xs: 0, sm: 1 },
+                  px: { xs: 0, sm: 2 },
                 }}
                 ref={provided.innerRef}
                 {...provided.droppableProps}
@@ -303,7 +288,7 @@ const SavedRecipes = () => {
       )}
 
       {status === "failed" && (
-        <Box textAlign="center" mt={{ xs: 3, md: 5 }}>
+        <Box textAlign="center" mt={4}>
           <Typography
             color="error"
             sx={{ fontSize: { xs: "1rem", md: "1.2rem" } }}
@@ -312,15 +297,18 @@ const SavedRecipes = () => {
           </Typography>
           <button
             style={{
-              padding: isMobile ? "8px 16px" : "10px 20px",
-              marginTop: "10px",
-              backgroundColor: "#ff6f61",
+              padding: "8px 16px",
+              marginTop: "12px",
+              backgroundColor: "#e74c3c",
               color: "white",
               border: "none",
-              borderRadius: "5px",
+              borderRadius: "6px",
               cursor: "pointer",
-              fontSize: isMobile ? "0.9rem" : "1rem",
+              fontSize: "0.9rem",
+              transition: "background-color 0.2s",
             }}
+            onMouseOver={(e) => (e.target.style.backgroundColor = "#c0392b")}
+            onMouseOut={(e) => (e.target.style.backgroundColor = "#e74c3c")}
             onClick={() => dispatch(fetchSavedRecipes())}
           >
             Retry

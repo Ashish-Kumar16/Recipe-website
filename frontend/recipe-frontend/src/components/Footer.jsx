@@ -15,7 +15,7 @@ const Footer = () => {
       }}
     >
       <Typography variant="h4" sx={{ fontStyle: "italic", fontWeight: "bold" }}>
-        Recipe
+        Recipe Haven
       </Typography>
       <Typography
         variant="subtitle2"
