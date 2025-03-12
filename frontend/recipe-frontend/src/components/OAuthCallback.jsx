@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setAuth, fetchUserProfile } from "../features/authSlice";
 import { parseJwt } from "../utils/jwt";
-import { toast } from "react-toastify"; // Import toast
+import { toast } from "react-toastify"; 
 
 function OAuthCallback() {
   const navigate = useNavigate();

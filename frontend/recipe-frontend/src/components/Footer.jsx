@@ -44,7 +44,7 @@ const Footer = () => {
           Privacy Policy
         </Typography>
         <Typography variant="caption" sx={{ color: "#999" }}>
-          © 2024 YourBrand, All Rights Reserved
+          © 2025 Recipe Haven, All Rights Reserved
         </Typography>
       </Box>
     </Box>
