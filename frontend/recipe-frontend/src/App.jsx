@@ -21,15 +21,14 @@ import Footer from "./components/Footer";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 
-const AppContent = ({ onSearch }) => {
+const AppContent = ({ searchQuery, onSearch }) => {
   const dispatch = useDispatch();
   const { isAuthenticated, loading: authLoading } = useSelector(
     (state) => state.auth,
   );
   const [isRestoringAuth, setIsRestoringAuth] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const location = useLocation();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const restoreAuth = async () => {
@@ -53,21 +52,12 @@ const AppContent = ({ onSearch }) => {
   }, [dispatch]);
 
   useEffect(() => {
-    // Update searchQuery from location.state if present
+    // Handle search query from navigation state
     if (location.state?.searchQuery) {
-      setSearchQuery(location.state.searchQuery);
-      // Clear the state after consuming it
+      onSearch(location.state.searchQuery);
       navigate(location.pathname, { replace: true, state: {} });
     }
-  }, [location, navigate]);
-
-  const handleSearch = (query) => {
-    setSearchQuery(query);
-    // Redirect to homepage with query if not already there
-    if (location.pathname !== "/") {
-      navigate("/", { state: { searchQuery: query } });
-    }
-  };
+  }, [location, navigate, onSearch]);
 
   if (isRestoringAuth || authLoading) {
     return <NavbarSkeleton />;
@@ -75,7 +65,7 @@ const AppContent = ({ onSearch }) => {
 
   return (
     <Routes>
-      <Route element={<Layout onSearch={handleSearch} />}>
+      <Route element={<Layout onSearch={onSearch} />}>
         <Route path="/" element={<Home searchQuery={searchQuery} />} />
         <Route path="/recipe/:id" element={<RecipeDetail />} />
         <Route
@@ -92,10 +82,16 @@ const AppContent = ({ onSearch }) => {
 };
 
 const App = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+  };
+
   return (
     <BrowserRouter>
-      <Navbar />
-      <AppContent />
+      <Navbar onSearch={handleSearch} />
+      <AppContent searchQuery={searchQuery} onSearch={handleSearch} />
       <Footer />
     </BrowserRouter>
   );

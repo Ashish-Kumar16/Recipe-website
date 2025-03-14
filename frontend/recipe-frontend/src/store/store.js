@@ -9,6 +9,10 @@ const store = configureStore({
     auth: authReducer,
     savedRecipes: savedRecipesReducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: false, // Disable serializability check
+    }),
 });
 
 export default store;

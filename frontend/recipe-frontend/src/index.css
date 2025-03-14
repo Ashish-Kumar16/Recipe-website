@@ -1,6 +1,16 @@
 body {
-  overflow: auto !important; /* Ensure body doesn’t restrict dragging */
+  overflow: auto !important;
 }
+
 .draggable-list {
-  position: relative; /* Ensure list is positioned correctly */
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh; /* Optional, depending on your needs */
+}
+
+* {
+  margin: 0;
+  padding: 0;
 }

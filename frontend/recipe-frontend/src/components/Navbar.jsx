@@ -17,21 +17,19 @@ import {
   Clear as ClearIcon,
   Menu as MenuIcon,
 } from "@mui/icons-material";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../features/authSlice";
 import { fetchSavedRecipes } from "../features/savedRecipesSlice";
 import AuthCard from "./AuthCard";
 import { styled, keyframes } from "@mui/system";
 
-// Pulse animation for avatar
 const pulse = keyframes`
   0% { box-shadow: 0 0 0 0 rgba(255, 112, 67, 0.7); }
   70% { box-shadow: 0 0 0 10px rgba(255, 112, 67, 0); }
   100% { box-shadow: 0 0 0 0 rgba(255, 112, 67, 0); }
 `;
 
-// Styled components
 const StyledAppBar = styled(AppBar)({
   background: "linear-gradient(to right, #ffffff, #f9f1e7)",
   boxShadow: "0 4px 15px rgba(0, 0, 0, 0.05)",
@@ -48,21 +46,14 @@ const SearchBox = styled(Box)({
   boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
   padding: "6px 12px",
   transition: "all 0.3s ease",
-  "&:hover": {
-    boxShadow: "0 6px 18px rgba(0, 0, 0, 0.15)",
-  },
-  "&:focus-within": {
-    border: "2px solid #3a5f3b",
-  },
+  "&:hover": { boxShadow: "0 6px 18px rgba(0, 0, 0, 0.15)" },
+  "&:focus-within": { border: "2px solid #3a5f3b" },
 });
 
 const StyledMenuItem = styled(MenuItem)({
   fontFamily: "Poppins, sans-serif",
   color: "#2f2f2f",
-  "&:hover": {
-    backgroundColor: "#f0f4f0",
-    color: "#3a5f3b",
-  },
+  "&:hover": { backgroundColor: "#f0f4f0", color: "#3a5f3b" },
 });
 
 const Navbar = ({ onSearch }) => {
@@ -74,30 +65,26 @@ const Navbar = ({ onSearch }) => {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const { data: savedRecipes } = useSelector((state) => state.savedRecipes);
   const dispatch = useDispatch();
-  const location = useLocation();
   const navigate = useNavigate();
-
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
-    if (isAuthenticated) {
-      dispatch(fetchSavedRecipes());
-    }
+    if (isAuthenticated) dispatch(fetchSavedRecipes());
   }, [isAuthenticated, dispatch]);
 
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate("/", { state: { searchQuery: searchQuery.trim() } });
       onSearch(searchQuery.trim());
+      navigate("/", { state: { searchQuery: searchQuery.trim() } });
     }
   };
 
   const handleClear = () => {
     setSearchQuery("");
-    onSearch("");
-    if (location.pathname !== "/") navigate("/");
+    onSearch(""); // Reset search to show all recipes
+    navigate("/"); // Redirect to home
   };
 
   const handleProfileClick = (event) => {
@@ -208,40 +195,8 @@ const Navbar = ({ onSearch }) => {
                       textDecoration: "none",
                       fontSize: "1.1rem",
                       fontFamily: "Poppins, sans-serif",
-                      fontWeight:
-                        location.pathname ===
-                        (text === "Home"
-                          ? "/"
-                          : `/${text.toLowerCase().replace(" ", "-")}`)
-                          ? 600
-                          : 400,
-                      color:
-                        location.pathname ===
-                        (text === "Home"
-                          ? "/"
-                          : `/${text.toLowerCase().replace(" ", "-")}`)
-                          ? "#ff7043"
-                          : "#2f2f2f",
-                      position: "relative",
-                      "&:hover": { color: "#3a5f3b" },
-                    }}
-                    sx={{
-                      "&:after": {
-                        content: '""',
-                        position: "absolute",
-                        width: "100%",
-                        height: "2px",
-                        bottom: "-4px",
-                        left: 0,
-                        backgroundColor: "#ff7043",
-                        transform: "scaleX(0)",
-                        transformOrigin: "bottom right",
-                        transition: "transform 0.3s ease-out",
-                      },
-                      "&:hover:after": {
-                        transform: "scaleX(1)",
-                        transformOrigin: "bottom left",
-                      },
+                      fontWeight: 400,
+                      color: "#2f2f2f",
                     }}
                   >
                     {text}
@@ -262,7 +217,6 @@ const Navbar = ({ onSearch }) => {
                       animation: `${pulse} 2s infinite`,
                       "&:hover": { bgcolor: "#ffb300" },
                     }}
-                    alt={user?.name || user?.email || "User"}
                   >
                     {user?.name?.[0]?.toUpperCase() ||
                       user?.email?.[0]?.toUpperCase() ||
@@ -308,8 +262,6 @@ const Navbar = ({ onSearch }) => {
                 fontFamily: "Poppins, sans-serif",
                 fontSize: "1rem",
                 color: "#2f2f2f",
-                "& .MuiInputBase-input": { padding: "8px 0" },
-                "&::placeholder": { color: "#6b7280", opacity: 1 },
               }}
             />
             {searchQuery && (
@@ -334,15 +286,6 @@ const Navbar = ({ onSearch }) => {
             onClose={handleMenuClose}
             anchorOrigin={{ vertical: "top", horizontal: "left" }}
             transformOrigin={{ vertical: "top", horizontal: "left" }}
-            PaperProps={{
-              sx: {
-                mt: 1,
-                borderRadius: "8px",
-                boxShadow: "0 6px 20px rgba(0, 0, 0, 0.1)",
-                backgroundColor: "#fff",
-              },
-            }}
-            TransitionProps={{ timeout: 300 }}
           >
             <StyledMenuItem onClick={() => handleMenuItemClick("/")}>
               Home
@@ -375,20 +318,11 @@ const Navbar = ({ onSearch }) => {
 
         {!isMobile && (
           <Menu
-            id="profile-menu"
             anchorEl={anchorEl}
             open={Boolean(anchorEl)}
             onClose={handleMenuClose}
             anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
             transformOrigin={{ vertical: "top", horizontal: "right" }}
-            PaperProps={{
-              sx: {
-                mt: 1,
-                borderRadius: "8px",
-                boxShadow: "0 6px 20px rgba(0, 0, 0, 0.1)",
-                backgroundColor: "#fff",
-              },
-            }}
           >
             <StyledMenuItem onClick={handleLogout}>Logout</StyledMenuItem>
           </Menu>
