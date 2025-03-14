@@ -8,7 +8,7 @@ import {
   deleteRecipe,
 } from "../../features/savedRecipesSlice";
 import { Box, Grid, Typography } from "@mui/material";
-import RestaurantMenuIcon from "@mui/icons-material/RestaurantMenu"; // Correct icon import
+import RestaurantMenuIcon from "@mui/icons-material/RestaurantMenu";
 import { toast } from "react-toastify";
 import FilterSection from "./FilterSection";
 import RecipeCardItem from "./RecipeCardItem";
@@ -16,7 +16,7 @@ import LoadingSkeleton from "./LoadingSkeleton";
 import ErrorState from "./ErrorState";
 import PaginationSection from "./PaginationSection";
 
-const RecipeGrid = ({ searchQuery }) => {
+const RecipeGrid = ({ searchQuery, isLoading }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -36,10 +36,12 @@ const RecipeGrid = ({ searchQuery }) => {
   const savedRecipes = savedRecipesData.map((recipe) => recipe.recipeId);
 
   useEffect(() => {
-    dispatch(fetchRecipes());
-    if (isAuthenticated) dispatch(fetchSavedRecipes());
+    if (!isLoading) {
+      dispatch(fetchRecipes());
+      if (isAuthenticated) dispatch(fetchSavedRecipes());
+    }
     setCurrentPage(1);
-  }, [dispatch, isAuthenticated, searchQuery, location.pathname]);
+  }, [dispatch, isAuthenticated, searchQuery, location.pathname, isLoading]);
 
   const filteredRecipes = recipes
     .filter(
@@ -95,11 +97,12 @@ const RecipeGrid = ({ searchQuery }) => {
           .catch((err) => toast.error(err || "Failed to save recipe"));
   };
 
+  const combinedLoading = isLoading || status === "loading";
+
   return (
     <Box
       sx={{
         padding: { xs: 2, md: 5 },
-        // background: "linear-gradient(to bottom, #fdfaf6, #f9f1e7)",
         minHeight: "100vh",
       }}
     >
@@ -128,8 +131,20 @@ const RecipeGrid = ({ searchQuery }) => {
       />
 
       <Grid container spacing={{ xs: 2, md: 4 }}>
-        {status === "loading" ? (
+        {combinedLoading ? (
           <LoadingSkeleton itemsPerPage={itemsPerPage} />
+        ) : status === "failed" ? (
+          <ErrorState
+            error={error}
+            retryAction={() => dispatch(fetchRecipes())}
+          />
+        ) : currentRecipes.length === 0 ? (
+          <Box sx={{ width: "100%", textAlign: "center", py: 4 }}>
+            <RestaurantMenuIcon sx={{ fontSize: 60, color: "#6b7280" }} />
+            <Typography sx={{ mt: 2, color: "#6b7280" }}>
+              No recipes found!
+            </Typography>
+          </Box>
         ) : (
           currentRecipes.map((recipe) => (
             <Grid item xs={12} sm={6} md={4} key={recipe.id}>
@@ -142,25 +157,9 @@ const RecipeGrid = ({ searchQuery }) => {
             </Grid>
           ))
         )}
-        {status !== "loading" && currentRecipes.length === 0 && (
-          <Box sx={{ width: "100%", textAlign: "center", py: 4 }}>
-            <RestaurantMenuIcon sx={{ fontSize: 60, color: "#6b7280" }} />{" "}
-            {/* Corrected icon */}
-            <Typography sx={{ mt: 2, color: "#6b7280" }}>
-              No recipes found!
-            </Typography>
-          </Box>
-        )}
       </Grid>
 
-      {status === "failed" && (
-        <ErrorState
-          error={error}
-          retryAction={() => dispatch(fetchRecipes())}
-        />
-      )}
-
-      {totalPages > 1 && (
+      {totalPages > 1 && !combinedLoading && status !== "failed" && (
         <PaginationSection
           totalPages={totalPages}
           currentPage={currentPage}

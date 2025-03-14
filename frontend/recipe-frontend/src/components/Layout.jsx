@@ -7,7 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 const Layout = ({ onSearch }) => {
   return (
     <>
-      <Navbar onSearch={onSearch} />
+      {/* <Navbar onSearch={onSearch} /> */}
       <Outlet />
       <ToastContainer
         position="top-right"

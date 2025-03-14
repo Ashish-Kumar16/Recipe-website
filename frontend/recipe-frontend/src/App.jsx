@@ -94,6 +94,7 @@ const AppContent = ({ onSearch }) => {
 const App = () => {
   return (
     <BrowserRouter>
+      <Navbar />
       <AppContent />
       <Footer />
     </BrowserRouter>
