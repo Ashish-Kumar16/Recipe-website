@@ -112,32 +112,11 @@ const Navbar = ({ onSearch }) => {
 
   const LogoComponent = () => (
     <Link to="/" style={{ textDecoration: "none", color: "inherit" }}>
-      <Box
-        sx={{
-          textAlign: "left",
-          transition: "transform 0.3s ease",
-          "&:hover": { transform: "scale(1.05)" },
-        }}
-      >
-        <Typography
-          variant="h4"
-          sx={{
-            fontFamily: "'Dancing Script', cursive",
-            fontWeight: 700,
-            color: "#3a5f3b",
-          }}
-        >
+      <Box sx={{ textAlign: "left", transition: "transform 0.3s ease", "&:hover": { transform: "scale(1.05)" } }}>
+        <Typography variant="h4" sx={{ fontFamily: "'Dancing Script', cursive", fontWeight: 700, color: "#3a5f3b" }}>
           Recipe Haven
         </Typography>
-        <Typography
-          variant="body2"
-          sx={{
-            letterSpacing: 2,
-            color: "#ff7043",
-            fontFamily: "Poppins, sans-serif",
-            fontWeight: 600,
-          }}
-        >
+        <Typography variant="body2" sx={{ letterSpacing: 2, color: "#ff7043", fontFamily: "Poppins, sans-serif", fontWeight: 600 }}>
           COOKING FOR THE SOUL
         </Typography>
       </Box>
@@ -146,25 +125,11 @@ const Navbar = ({ onSearch }) => {
 
   return (
     <StyledAppBar position="static">
-      <Box
-        sx={{ display: "flex", flexDirection: "column", minHeight: "110px" }}
-      >
-        <Toolbar
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            paddingBottom: 1,
-          }}
-        >
+      <Box sx={{ display: "flex", flexDirection: "column", minHeight: "110px" }}>
+        <Toolbar sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", paddingBottom: 1 }}>
           <Box sx={{ display: "flex", alignItems: "center" }}>
             {isMobile && (
-              <IconButton
-                edge="start"
-                sx={{ color: "#3a5f3b", mr: 1 }}
-                onClick={handleMenuOpen}
-              >
+              <IconButton edge="start" sx={{ color: "#3a5f3b", mr: 1 }} onClick={handleMenuOpen}>
                 <MenuIcon />
               </IconButton>
             )}
@@ -172,38 +137,17 @@ const Navbar = ({ onSearch }) => {
           </Box>
 
           {!isMobile && (
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-                position: "absolute",
-                left: "50%",
-                transform: "translateX(-50%)",
-              }}
-            >
-              {["Home", "Saved Recipe", "About us", "Contact us"].map(
-                (text) => (
-                  <Link
-                    key={text}
-                    to={
-                      text === "Home"
-                        ? "/"
-                        : `/${text.toLowerCase().replace(" ", "-")}`
-                    }
-                    style={{
-                      textDecoration: "none",
-                      fontSize: "1.1rem",
-                      fontFamily: "Poppins, sans-serif",
-                      fontWeight: 400,
-                      color: "#2f2f2f",
-                    }}
-                  >
-                    {text}
-                    {text === "Saved Recipe" && ` (${savedRecipes.length})`}
-                  </Link>
-                ),
-              )}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 4, position: "absolute", left: "50%", transform: "translateX(-50%)" }}>
+              {["Home", "Saved Recipe", "About us", "Contact us"].map((text) => (
+                <Link
+                  key={text}
+                  to={text === "Home" ? "/" : `/${text.toLowerCase().replace(" ", "-")}`}
+                  style={{ textDecoration: "none", fontSize: "1.1rem", fontFamily: "Poppins, sans-serif", fontWeight: 400, color: "#2f2f2f" }}
+                >
+                  {text}
+                  {text === "Saved Recipe" && ` (${savedRecipes.length})`}
+                </Link>
+              ))}
             </Box>
           )}
 
@@ -211,29 +155,12 @@ const Navbar = ({ onSearch }) => {
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               {isAuthenticated ? (
                 <IconButton onClick={handleProfileClick}>
-                  <Avatar
-                    sx={{
-                      bgcolor: "#ff7043",
-                      animation: `${pulse} 2s infinite`,
-                      "&:hover": { bgcolor: "#ffb300" },
-                    }}
-                  >
-                    {user?.name?.[0]?.toUpperCase() ||
-                      user?.email?.[0]?.toUpperCase() ||
-                      "U"}
+                  <Avatar sx={{ bgcolor: "#ff7043", animation: `${pulse} 2s infinite`, "&:hover": { bgcolor: "#ffb300" } }}>
+                    {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
                   </Avatar>
                 </IconButton>
               ) : (
-                <Typography
-                  sx={{
-                    fontSize: "1.1rem",
-                    fontFamily: "Poppins, sans-serif",
-                    color: "#ff7043",
-                    cursor: "pointer",
-                    "&:hover": { color: "#ffb300" },
-                  }}
-                  onClick={() => setOpenAuth(true)}
-                >
+                <Typography sx={{ fontSize: "1.1rem", fontFamily: "Poppins, sans-serif", color: "#ff7043", cursor: "pointer", "&:hover": { color: "#ffb300" } }} onClick={() => setOpenAuth(true)}>
                   Login
                 </Typography>
               )}
@@ -243,36 +170,17 @@ const Navbar = ({ onSearch }) => {
 
         <Box sx={{ display: "flex", justifyContent: "center", paddingTop: 1 }}>
           <SearchBox component="form" onSubmit={handleSearch}>
-            <IconButton
-              type="submit"
-              sx={{
-                p: "6px",
-                color: "#3a5f3b",
-                "&:hover": { color: "#ff7043" },
-              }}
-            >
+            <IconButton type="submit" sx={{ p: "6px", color: "#3a5f3b", "&:hover": { color: "#ff7043" } }}>
               <SearchIcon />
             </IconButton>
             <InputBase
               placeholder="Search recipes..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              sx={{
-                flex: 1,
-                fontFamily: "Poppins, sans-serif",
-                fontSize: "1rem",
-                color: "#2f2f2f",
-              }}
+              sx={{ flex: 1, fontFamily: "Poppins, sans-serif", fontSize: "1rem", color: "#2f2f2f" }}
             />
             {searchQuery && (
-              <IconButton
-                onClick={handleClear}
-                sx={{
-                  p: "6px",
-                  color: "#6b7280",
-                  "&:hover": { color: "#e74c3c" },
-                }}
-              >
+              <IconButton onClick={handleClear} sx={{ p: "6px", color: "#6b7280", "&:hover": { color: "#e74c3c" } }}>
                 <ClearIcon />
               </IconButton>
             )}
@@ -280,50 +188,21 @@ const Navbar = ({ onSearch }) => {
         </Box>
 
         {isMobile && (
-          <Menu
-            anchorEl={menuAnchorEl}
-            open={Boolean(menuAnchorEl)}
-            onClose={handleMenuClose}
-            anchorOrigin={{ vertical: "top", horizontal: "left" }}
-            transformOrigin={{ vertical: "top", horizontal: "left" }}
-          >
-            <StyledMenuItem onClick={() => handleMenuItemClick("/")}>
-              Home
-            </StyledMenuItem>
-            <StyledMenuItem
-              onClick={() => handleMenuItemClick("/saved-recipe")}
-            >
-              Saved Recipes ({savedRecipes.length})
-            </StyledMenuItem>
-            <StyledMenuItem onClick={() => handleMenuItemClick("/about-us")}>
-              About us
-            </StyledMenuItem>
-            <StyledMenuItem onClick={() => handleMenuItemClick("/contact-us")}>
-              Contact us
-            </StyledMenuItem>
+          <Menu anchorEl={menuAnchorEl} open={Boolean(menuAnchorEl)} onClose={handleMenuClose} anchorOrigin={{ vertical: "top", horizontal: "left" }} transformOrigin={{ vertical: "top", horizontal: "left" }}>
+            <StyledMenuItem onClick={() => handleMenuItemClick("/")}>Home</StyledMenuItem>
+            <StyledMenuItem onClick={() => handleMenuItemClick("/saved-recipe")}>Saved Recipes ({savedRecipes.length})</StyledMenuItem>
+            <StyledMenuItem onClick={() => handleMenuItemClick("/about-us")}>About us</StyledMenuItem>
+            <StyledMenuItem onClick={() => handleMenuItemClick("/contact-us")}>Contact us</StyledMenuItem>
             {isAuthenticated ? (
               <StyledMenuItem onClick={handleLogout}>Logout</StyledMenuItem>
             ) : (
-              <StyledMenuItem
-                onClick={() => {
-                  setOpenAuth(true);
-                  handleMenuClose();
-                }}
-              >
-                Login
-              </StyledMenuItem>
+              <StyledMenuItem onClick={() => { setOpenAuth(true); handleMenuClose(); }}>Login</StyledMenuItem>
             )}
           </Menu>
         )}
 
         {!isMobile && (
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleMenuClose}
-            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-            transformOrigin={{ vertical: "top", horizontal: "right" }}
-          >
+          <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose} anchorOrigin={{ vertical: "bottom", horizontal: "right" }} transformOrigin={{ vertical: "top", horizontal: "right" }}>
             <StyledMenuItem onClick={handleLogout}>Logout</StyledMenuItem>
           </Menu>
         )}
