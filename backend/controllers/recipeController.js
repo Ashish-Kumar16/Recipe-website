@@ -10,6 +10,7 @@ const API_KEYS = [
   process.env.SPOONACULAR_API_KEY_2,
   process.env.SPOONACULAR_API_KEY_3,
   process.env.SPOONACULAR_API_KEY_4,
+  process.env.SPOONACULAR_API_KEY_5,
 ].filter(Boolean);
 
 const fetchFromSpoonacular = async (url) => {
